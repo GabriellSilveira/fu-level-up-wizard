@@ -1,6 +1,6 @@
 /* ==========================================================================
- * 1. BOTÃO ORNAMENTADO NO CENTRO SUPERIOR DA TELA & BANNER NA FICHA
- * ========================================================================== */
+- 1. BOTÃO ORNAMENTADO NO CENTRO SUPERIOR DA TELA & BANNER NA FICHA
+- ========================================================================== */
 #fu-levelup-hud-trigger {
   position: fixed;
   top: 12px;
@@ -173,29 +173,35 @@
   white-space: nowrap;
 }
 
-/* Ícones oficiais do sistema projectfu & Badges inline de Dano e Status */
-.fu-sys-glyph {
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  vertical-align: -2px;
+/* Ícones SVG nítidos & Badges inline de Dano, Suporte e Status */
+.fu-svg-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
+  line-height: 1;
+}
+
+.fu-svg-glyph svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .fu-inline-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 1px 7px;
+  gap: 5px;
+  padding: 1px 8px;
   border-radius: 4px;
   background: rgba(250, 204, 21, 0.14);
-  border: 1px solid rgba(250, 204, 21, 0.35);
+  border: 1px solid rgba(250, 204, 21, 0.42);
   color: #fde047;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
+  vertical-align: baseline;
 }
 
 .fu-inline-dmg,
@@ -213,15 +219,15 @@
   vertical-align: baseline;
 }
 
-.fu-inline-dmg .fu-sys-glyph,
-.fu-inline-effect .fu-sys-glyph {
-  width: 13px;
-  height: 13px;
+.fu-inline-dmg .fu-svg-glyph,
+.fu-inline-effect .fu-svg-glyph {
+  width: 12px;
+  height: 12px;
 }
 
 /* ==========================================================================
- * 2. OVERLAY FULLSCREEN, LOADING EM ESPIRAL & ANIMAÇÃO DE FECHAMENTO
- * ========================================================================== */
+- 2. OVERLAY FULLSCREEN, LOADING EM ESPIRAL & ANIMAÇÃO DE FECHAMENTO
+- ========================================================================== */
 #fu-levelup-overlay {
   position: fixed;
   inset: 0;
@@ -356,8 +362,8 @@
 }
 
 /* ==========================================================================
- * 3. ETAPA 1 (ANIMAÇÃO NOVO NÍVEL + BOTÃO METÁLICO DOURADO GRAVADO)
- * ========================================================================== */
+- 3. ETAPA 1 (ANIMAÇÃO NOVO NÍVEL + BOTÃO METÁLICO DOURADO GRAVADO)
+- ========================================================================== */
 .fu-overlay-close-btn {
   position: absolute;
   top: 22px;
@@ -769,8 +775,8 @@
 }
 
 /* ==========================================================================
- * 4. ETAPA 2: ÁRVORE RADIAL (DE-ZOOM SUAVE + RAMIFICAÇÕES + BOLINHA VERDE)
- * ========================================================================== */
+- 4. ETAPA 2: ÁRVORE RADIAL (DE-ZOOM SUAVE + RAMIFICAÇÕES + BOLINHA VERDE)
+- ========================================================================== */
 .fu-tree-screen {
   position: relative;
   width: 100%;
@@ -1287,9 +1293,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
-.fu-spell-branch-el-pin .fu-sys-glyph {
-  width: 14px;
-  height: 14px;
+.fu-spell-branch-el-pin .fu-svg-glyph {
+  width: 13px;
+  height: 13px;
 }
 
 .fu-spell-branch-label {
@@ -1409,8 +1415,8 @@
 }
 
 /* ==========================================================================
- * 5. MODAL GRANDE DE INSPEÇÃO E SELEÇÃO DE HABILIDADE (LEVE E FLUIDO)
- * ========================================================================== */
+- 5. MODAL GRANDE DE INSPEÇÃO E SELEÇÃO DE HABILIDADE (LEVE E FLUIDO)
+- ========================================================================== */
 .fu-skill-showcase-backdrop {
   position: fixed;
   inset: 0;
@@ -1735,8 +1741,8 @@
 }
 
 /* ==========================================================================
- * 6. MODAIS BASE & CARDS MARROM-DOURADOS (ESCOLHER NOVA CLASSE)
- * ========================================================================== */
+- 6. MODAIS BASE & CARDS MARROM-DOURADOS (ESCOLHER NOVA CLASSE)
+- ========================================================================== */
 .fu-class-picker-modal {
   position: fixed;
   inset: 0;
@@ -1943,8 +1949,8 @@
 }
 
 /* ==========================================================================
- * 7. MODAL DE FEITIÇOS — BANNERS CENTRALIZADOS + TAGS DE SUPORTE/DANO/STATUS
- * ========================================================================== */
+- 7. MODAL DE FEITIÇOS — BANNERS CENTRALIZADOS + TAGS DE SUPORTE/DANO/STATUS
+- ========================================================================== */
 .fu-spell-toggle-all-btn {
   height: 36px;
   padding: 0 14px;
@@ -2076,9 +2082,9 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);
 }
 
-.fu-medallion-element-badge .fu-sys-glyph {
-  width: 18px;
-  height: 18px;
+.fu-medallion-element-badge .fu-svg-glyph {
+  width: 16px;
+  height: 16px;
 }
 
 .fu-banner-rank-title {
@@ -2182,8 +2188,8 @@
 }
 
 /* ==========================================================================
- * 8. MODAL DE PODERES HERÓICOS
- * ========================================================================== */
+- 8. MODAL DE PODERES HERÓICOS
+- ========================================================================== */
 .fu-heroic-tabs-bar {
   display: flex;
   gap: 10px;
