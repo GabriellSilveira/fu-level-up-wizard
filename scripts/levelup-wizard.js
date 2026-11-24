@@ -20,26 +20,151 @@ const SPELL_GRANTING_FUIDS = new Set([
 ]);
 
 const ELEMENT_META = {
-  fire: { label: "Fogo", iconClass: "fu-fire", color: "#f97316", bg: "rgba(249, 115, 22, 0.22)", border: "rgba(249, 115, 22, 0.6)" },
+  fire: { label: "Fogo", iconClass: "fu-fire", color: "#fb923c", bg: "rgba(249, 115, 22, 0.22)", border: "rgba(249, 115, 22, 0.6)" },
   ice: { label: "Gelo", iconClass: "fu-ice", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.22)", border: "rgba(56, 189, 248, 0.6)" },
   bolt: { label: "Raio", iconClass: "fu-bolt", color: "#facc15", bg: "rgba(250, 204, 21, 0.22)", border: "rgba(250, 204, 21, 0.6)" },
-  earth: { label: "Terra", iconClass: "fu-earth", color: "#a3e635", bg: "rgba(132, 204, 22, 0.22)", border: "rgba(132, 204, 22, 0.55)" },
+  earth: { label: "Terra", iconClass: "fu-earth", color: "#d97706", bg: "rgba(217, 119, 6, 0.22)", border: "rgba(217, 119, 6, 0.6)" },
   air: { label: "Ar", iconClass: "fu-air", color: "#34d399", bg: "rgba(52, 211, 153, 0.22)", border: "rgba(52, 211, 153, 0.55)" },
   light: { label: "Luz", iconClass: "fu-light", color: "#fef08a", bg: "rgba(254, 240, 138, 0.22)", border: "rgba(254, 240, 138, 0.6)" },
   dark: { label: "Trevas", iconClass: "fu-dark", color: "#c084fc", bg: "rgba(192, 132, 252, 0.22)", border: "rgba(192, 132, 252, 0.6)" },
-  poison: { label: "Veneno", iconClass: "fu-poison", color: "#e879f9", bg: "rgba(217, 70, 239, 0.22)", border: "rgba(217, 70, 239, 0.6)" }
+  poison: { label: "Veneno", iconClass: "fu-poison", color: "#e879f9", bg: "rgba(217, 70, 239, 0.22)", border: "rgba(217, 70, 239, 0.6)" },
+  physical: { label: "Físico", iconClass: "fu-physical", color: "#cbd5e1", bg: "rgba(148, 163, 184, 0.22)", border: "rgba(148, 163, 184, 0.55)" }
 };
 
 const EFFECT_LABELS = {
-  slow: { label: "Lento", iconClass: "fu-slow" },
-  dazed: { label: "Confuso", iconClass: "fu-dazed" },
-  weak: { label: "Fraco", iconClass: "fu-weak" },
-  shaken: { label: "Abalado", iconClass: "fu-shaken" },
-  enraged: { label: "Enfurecido", iconClass: "fu-enraged" },
-  poisoned: { label: "Envenenado", iconClass: "fu-poisoned" },
-  crisis: { label: "Crise", iconClass: "fu-crisis" },
-  guard: { label: "Protegido", iconClass: "fu-guard" },
-  flying: { label: "Voando", iconClass: "fu-flying" }
+  slow: { label: "Lento", iconClass: "fu-slow", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.2)", border: "rgba(56, 189, 248, 0.55)" },
+  dazed: { label: "Atordoado", iconClass: "fu-dazed", color: "#facc15", bg: "rgba(250, 204, 21, 0.2)", border: "rgba(250, 204, 21, 0.55)" },
+  weak: { label: "Fraco", iconClass: "fu-weak", color: "#fb923c", bg: "rgba(251, 146, 60, 0.2)", border: "rgba(251, 146, 60, 0.55)" },
+  shaken: { label: "Abalado", iconClass: "fu-shaken", color: "#c084fc", bg: "rgba(192, 132, 252, 0.2)", border: "rgba(192, 132, 252, 0.55)" },
+  enraged: { label: "Enfurecido", iconClass: "fu-enraged", color: "#f87171", bg: "rgba(248, 113, 113, 0.2)", border: "rgba(248, 113, 113, 0.55)" },
+  poisoned: { label: "Envenenado", iconClass: "fu-poisoned", color: "#e879f9", bg: "rgba(232, 121, 249, 0.2)", border: "rgba(232, 121, 249, 0.55)" },
+  guard: { label: "Protegido", iconClass: "fu-guard", color: "#60a5fa", bg: "rgba(96, 165, 250, 0.2)", border: "rgba(96, 165, 250, 0.55)" }
+};
+
+const SUPPORT_KEYWORD_RULES = [
+  {
+    key: "heal",
+    label: "Cura",
+    iconClass: "fu-hp",
+    color: "#4ade80",
+    bg: "rgba(74, 222, 128, 0.18)",
+    border: "rgba(74, 222, 128, 0.55)",
+    regex: /\b(cura|curar|curando|recupera\w*\s+\d*\s*pontos de vida|recuperar\s+pv|heal|recover\w*\s+\d*\s*hit points)\b/i
+  },
+  {
+    key: "mana",
+    label: "Mana",
+    iconClass: "fu-mp",
+    color: "#38bdf8",
+    bg: "rgba(56, 189, 248, 0.18)",
+    border: "rgba(56, 189, 248, 0.55)",
+    regex: /\b(recupera\w*\s+\d*\s*pontos de mana|recuperar\s+pm|recover\w*\s+\d*\s*mind points)\b/i
+  },
+  {
+    key: "mdef",
+    label: "Defesa Mágica",
+    iconClass: "fu-mdef",
+    color: "#818cf8",
+    bg: "rgba(129, 140, 248, 0.18)",
+    border: "rgba(129, 140, 248, 0.55)",
+    regex: /\b(defesa mágica|def\.m|magic defense)\b/i
+  },
+  {
+    key: "def",
+    label: "Defesa",
+    iconClass: "fu-def",
+    color: "#60a5fa",
+    bg: "rgba(96, 165, 250, 0.18)",
+    border: "rgba(96, 165, 250, 0.55)",
+    regex: /\b(tratar sua defesa|bônus\s+(?:de\s+)?defesa|defense equal to)\b/i
+  },
+  {
+    key: "resistance",
+    label: "Resistência",
+    iconClass: "fu-guard",
+    color: "#2dd4bf",
+    bg: "rgba(45, 212, 191, 0.18)",
+    border: "rgba(45, 212, 191, 0.55)",
+    regex: /\b(ganha\w*\s+resistência|resistência ao tipo|resistance to)\b/i
+  },
+  {
+    key: "enchant",
+    label: "Encantamento",
+    iconClass: "fu-weaponEnchant",
+    color: "#fbbf24",
+    bg: "rgba(251, 191, 36, 0.18)",
+    border: "rgba(251, 191, 36, 0.55)",
+    regex: /\b(imbui uma arma|arma equipada|imbue a weapon)\b/i
+  },
+  {
+    key: "cleanse",
+    label: "Purificação",
+    iconClass: "fu-stagger",
+    color: "#f472b6",
+    bg: "rgba(244, 114, 182, 0.18)",
+    border: "rgba(244, 114, 182, 0.55)",
+    regex: /\b(remove\w*\s+(?:um\s+|todos\s+os\s+)?(?:efeito|condiç)|curado\s+de\s+(?:um\s+)?efeito|recover\s+from\s+(?:a\s+|all\s+)?status)\b/i
+  },
+  {
+    key: "mobility",
+    label: "Mobilidade",
+    iconClass: "fu-header",
+    color: "#a7f3d0",
+    bg: "rgba(167, 243, 208, 0.16)",
+    border: "rgba(167, 243, 208, 0.5)",
+    regex: /\b(voando|voar|teleporta|flying|fly)\b/i
+  }
+];
+
+const DAMAGE_WORD_MAP = {
+  fogo: "fire",
+  fire: "fire",
+  gelo: "ice",
+  ice: "ice",
+  raio: "bolt",
+  raios: "bolt",
+  bolt: "bolt",
+  lightning: "bolt",
+  terra: "earth",
+  earth: "earth",
+  ar: "air",
+  air: "air",
+  luz: "light",
+  light: "light",
+  trevas: "dark",
+  dark: "dark",
+  veneno: "poison",
+  poison: "poison",
+  "físico": "physical",
+  "física": "physical",
+  physical: "physical"
+};
+
+const STATUS_WORD_MAP = {
+  lento: "slow",
+  lenta: "slow",
+  slow: "slow",
+  confuso: "dazed",
+  confusa: "dazed",
+  atordoado: "dazed",
+  atordoada: "dazed",
+  dazed: "dazed",
+  fraco: "weak",
+  fraca: "weak",
+  enfraquecido: "weak",
+  enfraquecida: "weak",
+  weak: "weak",
+  abalado: "shaken",
+  abalada: "shaken",
+  shaken: "shaken",
+  enfurecido: "enraged",
+  enfurecida: "enraged",
+  furioso: "enraged",
+  furiosa: "enraged",
+  enraged: "enraged",
+  envenenado: "poisoned",
+  envenenada: "poisoned",
+  poisoned: "poisoned"
 };
 
 /**
@@ -68,12 +193,91 @@ export function getPendingLevelInfo(actor) {
 }
 
 /**
- * Limpa e converte tags @ICON[...], @EFFECT[...], @GAIN[...], @LOSS[...], @DMG[...] e @UUID[...]
- * usando os ícones oficiais do sistema projectfu.
+ * Percorre nós de texto de um elemento HTML e destaca tipos de dano e condições
+ * de status com os ícones e cores oficiais do projectfu.
+ */
+function highlightRichKeywordsInDom(rootEl) {
+  const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      const parent = node.parentElement;
+      if (parent && parent.closest(".fu-inline-tag, .fu-inline-effect, .fu-inline-dmg")) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+
+  const textNodes = [];
+  let current;
+  while ((current = walker.nextNode())) {
+    textNodes.push(current);
+  }
+
+  const combinedRegex =
+    /(?<![A-Za-zÀ-ÿ])(fogo|fire|gelo|ice|raios?|bolt|lightning|terra|earth|ar|air|luz|light|trevas|dark|veneno|poison|físic[oa]|physical|lent[oa]|slow|confus[oa]|atordoad[oa]|dazed|frac[oa]|enfraquecid[oa]|weak|abalad[oa]|shaken|enfurecid[oa]|furios[oa]|enraged|envenenad[oa]|poisoned)(?![A-Za-zÀ-ÿ])/gi;
+
+  for (const textNode of textNodes) {
+    const text = textNode.nodeValue;
+    combinedRegex.lastIndex = 0;
+    if (!combinedRegex.test(text)) continue;
+
+    combinedRegex.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match;
+
+    while ((match = combinedRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+      }
+
+      const rawWord = match[0];
+      const lower = rawWord.toLowerCase();
+      const dmgKey = DAMAGE_WORD_MAP[lower];
+      const statusKey = STATUS_WORD_MAP[lower];
+
+      if (dmgKey && ELEMENT_META[dmgKey]) {
+        const meta = ELEMENT_META[dmgKey];
+        const span = document.createElement("span");
+        span.className = "fu-inline-dmg";
+        span.style.color = meta.color;
+        span.style.borderColor = meta.border;
+        span.style.background = meta.bg;
+        span.innerHTML = `${renderSystemIcon(meta.iconClass)}<span>${rawWord}</span>`;
+        frag.appendChild(span);
+      } else if (statusKey && EFFECT_LABELS[statusKey]) {
+        const eff = EFFECT_LABELS[statusKey];
+        const span = document.createElement("span");
+        span.className = "fu-inline-effect";
+        span.style.color = eff.color;
+        span.style.borderColor = eff.border;
+        span.style.background = eff.bg;
+        span.innerHTML = `${renderSystemIcon(eff.iconClass)}<span>${rawWord}</span>`;
+        frag.appendChild(span);
+      } else {
+        frag.appendChild(document.createTextNode(rawWord));
+      }
+
+      lastIndex = match.index + rawWord.length;
+    }
+
+    if (lastIndex < text.length) {
+      frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    textNode.parentNode.replaceChild(frag, textNode);
+  }
+}
+
+/**
+ * Formata descrições de habilidades e feitiços com ícones oficiais do sistema,
+ * tipos de dano coloridos e condições de status destacadas.
  */
 function formatFUDescription(rawHtml = "") {
   if (!rawHtml) return "<p>Sem descrição disponível.</p>";
-  return rawHtml
+
+  const preformatted = rawHtml
     .replace(/@ICON\[([^\]]+)\]/gi, (_, iconName) => {
       const key = iconName.trim().toLowerCase();
       const map = {
@@ -81,6 +285,7 @@ function formatFUDescription(rawHtml = "") {
         spell: { label: "Feitiço", iconClass: "fu-spell" },
         melee: { label: "Corpo a Corpo", iconClass: "fu-melee" },
         ranged: { label: "À Distância", iconClass: "fu-ranged" },
+        range: { label: "À Distância", iconClass: "fu-range" },
         martial: { label: "Marcial", iconClass: "fu-martial" },
         physical: { label: "Físico", iconClass: "fu-physical" },
         fire: { label: "Fogo", iconClass: "fu-fire" },
@@ -105,7 +310,10 @@ function formatFUDescription(rawHtml = "") {
       const found = EFFECT_LABELS[key];
       const text = curlyLabel || bracketLabel || (found ? found.label : effKey);
       const iconClass = found ? found.iconClass : `fu-${key}`;
-      return `<span class="fu-inline-effect">${renderSystemIcon(iconClass)} ${text}</span>`;
+      const style = found
+        ? `style="color: ${found.color}; border-color: ${found.border}; background: ${found.bg};"`
+        : "";
+      return `<span class="fu-inline-effect" ${style}>${renderSystemIcon(iconClass)} ${text}</span>`;
     })
     .replace(/@(?:GAIN|LOSS|DMG)\[([^\]]+)\](?:\{([^}]+)\}|\[([^\]]+)\])?/gi, (_, expr, curlyLabel, bracketLabel) => {
       const label = curlyLabel || bracketLabel || expr;
@@ -114,22 +322,25 @@ function formatFUDescription(rawHtml = "") {
     .replace(/@UUID\[([^\]]+)\](?:\{([^}]+)\})?/g, (_, _uuid, label) => {
       return `<strong>${label || "Referência"}</strong>`;
     });
+
+  const container = document.createElement("div");
+  container.innerHTML = preformatted;
+  highlightRichKeywordsInDom(container);
+  return container.innerHTML;
 }
 
 /**
- * Detecta os tipos de dano elemental de um feitiço a partir de todos os campos do sistema
- * e da descrição HTML normalizada.
+ * Detecta os tipos de dano elemental de um feitiço ofensivo ou encantamento.
  */
 function detectSpellElements(spellDoc) {
   const found = [];
   const addUnique = (key) => {
     const normalized = key === "lightning" ? "bolt" : key === "wind" ? "air" : key;
-    if (ELEMENT_META[normalized] && !found.some((item) => item.key === normalized)) {
+    if (ELEMENT_META[normalized] && normalized !== "physical" && !found.some((item) => item.key === normalized)) {
       found.push({ key: normalized, ...ELEMENT_META[normalized] });
     }
   };
 
-  // 1. Campos estruturados do projectfu (v2 / v3)
   const candidateTypes = [
     spellDoc?.system?.rollInfo?.damage?.type,
     spellDoc?.system?.damage?.type,
@@ -143,7 +354,6 @@ function detectSpellElements(spellDoc) {
     }
   }
 
-  // 2. Enrichers brutos na descrição (@DMG[... fire], @ICON[bolt], etc.)
   const rawDesc = spellDoc?.system?.description || "";
   const dmgTagRegex = /@DMG\[[^\]]*\b(fire|ice|bolt|lightning|earth|air|wind|light|dark|poison)\b[^\]]*\]/gi;
   let dmgMatch;
@@ -157,7 +367,6 @@ function detectSpellElements(spellDoc) {
     addUnique(iconMatch[1].toLowerCase());
   }
 
-  // 3. Texto plano normalizado (removendo tags HTML como <strong> e espaços duplos)
   const plainDesc = rawDesc
     .replace(/&nbsp;/gi, " ")
     .replace(/<[^>]+>/g, " ")
@@ -177,8 +386,64 @@ function detectSpellElements(spellDoc) {
 }
 
 /**
- * Extrai uma descrição breve e limpa da classe para o card marrom-dourado.
+ * Extrai tags automáticas para feitiços de Suporte / Utilidade com base nas palavras-chave da descrição.
  */
+function detectSupportSpellTags(spellDoc) {
+  const rawDesc = spellDoc?.system?.description || "";
+  const plainDesc = rawDesc
+    .replace(/&nbsp;/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+
+  const tags = [];
+  for (const rule of SUPPORT_KEYWORD_RULES) {
+    if (rule.regex.test(plainDesc)) {
+      tags.push({
+        label: rule.label,
+        iconClass: rule.iconClass,
+        color: rule.color,
+        bg: rule.bg,
+        border: rule.border
+      });
+    }
+  }
+  return tags;
+}
+
+/**
+ * Detecta condições de status mencionadas em um feitiço (ex.: Atordoado, Abalado).
+ */
+function detectSpellStatusTags(spellDoc) {
+  const rawDesc = spellDoc?.system?.description || "";
+  const plainDesc = rawDesc
+    .replace(/&nbsp;/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
+  const found = [];
+  const addStatus = (key, customLabel = null) => {
+    if (EFFECT_LABELS[key] && !found.some((s) => s.key === key)) {
+      found.push({
+        key,
+        ...EFFECT_LABELS[key],
+        label: customLabel || EFFECT_LABELS[key].label
+      });
+    }
+  };
+
+  if (/\b(atordoad[oa]|confus[oa]|dazed)\b/.test(plainDesc)) {
+    addStatus("dazed", /\batordoad[oa]\b/.test(plainDesc) ? "Atordoado" : "Confuso");
+  }
+  if (/\b(abalad[oa]|shaken)\b/.test(plainDesc)) addStatus("shaken");
+  if (/\b(lent[oa]|slow)\b/.test(plainDesc)) addStatus("slow");
+  if (/\b(frac[oa]|enfraquecid[oa]|weak)\b/.test(plainDesc)) addStatus("weak");
+  if (/\b(enfurecid[oa]|furios[oa]|enraged)\b/.test(plainDesc)) addStatus("enraged");
+  if (/\b(envenenad[oa]|poisoned)\b/.test(plainDesc)) addStatus("poisoned");
+
+  return found;
+}
+
 function getClassBriefDescription(classDoc) {
   const rawDesc = classDoc?.system?.description || "";
   if (rawDesc) {
@@ -196,9 +461,6 @@ function getClassBriefDescription(classDoc) {
   return summary || "Classe jogável de Fabula Ultima com poderes únicos.";
 }
 
-/**
- * Gera resumo curto dos benefícios gratuitos da classe.
- */
 function getClassShortBenefitTag(classDoc) {
   const res = classDoc?.system?.benefits?.resources ?? {};
   const mar = classDoc?.system?.benefits?.martials ?? {};
@@ -211,9 +473,6 @@ function getClassShortBenefitTag(classDoc) {
   return tags.join(" • ") || "Poderes de Classe";
 }
 
-/**
- * Verifica se uma perícia concede escolha de feitiço (ex.: Magia Elemental).
- */
 function doesSkillGrantSpell(skillDoc) {
   const traits = Array.isArray(skillDoc?.system?.traits) ? skillDoc.system.traits : [];
   if (traits.includes("grant-spell")) return true;
@@ -263,7 +522,8 @@ export class FULevelUpWizard {
     // Estados de seleção e animações
     this.stagedNewClass = null;
     this.animateStagedSpawn = false;
-    this.recentUpgradeAnim = null; // { skillFuid, classFuid, newRank, skillImg, skillName, newSpellId }
+    this.recentUpgradeAnim = null;
+    this.pendingDezoomTransition = null;
     this.inspectedSkill = null;
     this.spellPickerContext = null;
     this.heroicPickerContext = null;
@@ -325,9 +585,6 @@ export class FULevelUpWizard {
     `;
   }
 
-  /**
-   * Carrega Classes, Perícias, Feitiços e Poderes Heróicos dos compêndios relevantes.
-   */
   async loadCompendiumData() {
     if (FULevelUpWizard._cachedCatalog) {
       this.catalog = FULevelUpWizard._cachedCatalog;
@@ -459,7 +716,6 @@ export class FULevelUpWizard {
         const maxRank = Math.max(1, Number(poolSkill.system?.level?.max ?? actorSkill?.system?.level?.max ?? 1));
         const grantsSpell = doesSkillGrantSpell(poolSkill);
 
-        // Coleta os feitiços aprendidos vinculados a esta habilidade para ramificação na árvore
         const learnedSpells = [];
         const seenSpellIds = new Set();
 
@@ -475,7 +731,6 @@ export class FULevelUpWizard {
           }
         }
 
-        // Fallback: se a habilidade concede feitiços e o personagem já possui feitiços desta classe na ficha
         if (grantsSpell && currentRank > 0) {
           for (const spItem of ownedSpells) {
             const spClass = (spItem.system?.class?.value || "").trim().toLowerCase();
@@ -597,7 +852,7 @@ export class FULevelUpWizard {
       this.pan.y = ev.clientY - this.dragStart.y;
       const canvasEl = this.root?.querySelector("#fu-tree-canvas");
       if (canvasEl) {
-        canvasEl.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
+        canvasEl.style.transform = `translate3d(${this.pan.x}px, ${this.pan.y}px, 0) scale(${this.zoom})`;
       }
     };
 
@@ -640,12 +895,12 @@ export class FULevelUpWizard {
         </div>
       `;
       this.root.appendChild(flash);
-      await new Promise((r) => setTimeout(r, 650));
+      await new Promise((r) => setTimeout(r, 620));
     }
 
     if (this.root) {
       this.root.classList.add("is-closing");
-      await new Promise((r) => setTimeout(r, 520));
+      await new Promise((r) => setTimeout(r, 460));
     }
 
     this.destroyImmediate();
@@ -775,6 +1030,12 @@ export class FULevelUpWizard {
     const classesData = this.getActorClassesData();
     const canAddClass = classesData.length < MAX_CLASSES && !this.stagedNewClass;
     const upgradeAnim = this.recentUpgradeAnim;
+    const dezoomTransition = this.pendingDezoomTransition;
+
+    // Se houver uma transição de de-zoom pendente, renderizamos o canvas inicialmente
+    // na câmera ampliada para depois deslizar suavemente até o destino.
+    const initialPan = dezoomTransition ? dezoomTransition.fromPan : this.pan;
+    const initialZoom = dezoomTransition ? dezoomTransition.fromZoom : this.zoom;
 
     this.root.innerHTML = `
       <div class="fu-tree-screen">
@@ -803,7 +1064,7 @@ export class FULevelUpWizard {
 
         <div class="fu-tree-viewport" id="fu-tree-viewport">
           <div class="fu-tree-parallax-layer" id="fu-tree-parallax-layer">
-            <div class="fu-tree-canvas" id="fu-tree-canvas" style="transform: translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom});">
+            <div class="fu-tree-canvas" id="fu-tree-canvas" style="transform: translate3d(${initialPan.x}px, ${initialPan.y}px, 0) scale(${initialZoom});">
               <svg class="fu-tree-lines-svg" id="fu-tree-lines-svg" width="2800" height="2800" viewBox="-1400 -1400 2800 2800"></svg>
               <div class="fu-tree-nodes-layer" id="fu-tree-nodes-layer"></div>
             </div>
@@ -835,6 +1096,25 @@ export class FULevelUpWizard {
     this.populateRadialTree(classesData, info, upgradeAnim);
     this.bindTreeEvents();
 
+    // Executa o de-zoom suave de volta para a árvore completa sem pulos
+    if (dezoomTransition) {
+      const targetPan = { ...dezoomTransition.toPan };
+      const targetZoom = dezoomTransition.toZoom;
+      this.pendingDezoomTransition = null;
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const canvasEl = this.root?.querySelector("#fu-tree-canvas");
+          if (!canvasEl) return;
+          canvasEl.classList.add("is-smooth-dezoom");
+          canvasEl.style.transform = `translate3d(${targetPan.x}px, ${targetPan.y}px, 0) scale(${targetZoom})`;
+          setTimeout(() => {
+            canvasEl.classList.remove("is-smooth-dezoom");
+          }, 720);
+        }, 120);
+      });
+    }
+
     this.animateStagedSpawn = false;
     this.recentUpgradeAnim = null;
   }
@@ -845,7 +1125,6 @@ export class FULevelUpWizard {
     const parallaxLayer = this.root.querySelector("#fu-tree-parallax-layer");
     if (!svg || !layer) return;
 
-    // Anéis guia orbitais ampliados
     [165, 365, 490].forEach((radius) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("cx", "0");
@@ -995,17 +1274,6 @@ export class FULevelUpWizard {
           <span class="fu-skill-title">${skill.name}</span>
         `;
 
-        // Animação do card/ícone voando da tela de detalhes de volta para o nó na árvore
-        if (isJustUpgraded) {
-          const ghost = document.createElement("div");
-          ghost.className = "fu-returning-skill-ghost";
-          ghost.style.setProperty("--target-x", `${nx}px`);
-          ghost.style.setProperty("--target-y", `${ny}px`);
-          ghost.innerHTML = `<img src="${skill.img}" alt="${skill.name}" />`;
-          layer.appendChild(ghost);
-          setTimeout(() => ghost.remove(), 750);
-        }
-
         skillEl.addEventListener("mouseenter", () => {
           if (!parallaxLayer || this.inspectedSkill) return;
           const dist = Math.hypot(nx, ny) || 1;
@@ -1035,9 +1303,7 @@ export class FULevelUpWizard {
 
         layer.appendChild(skillEl);
 
-        // ====================================================================
-        // RAMIFICAÇÕES DE FEITIÇOS APRENDIDOS A PARTIR DESTA HABILIDADE
-        // ====================================================================
+        // Ramificações de feitiços aprendidos vinculados a esta habilidade
         if (skill.learnedSpells && skill.learnedSpells.length > 0) {
           const outAngle = Math.atan2(ny - sy, nx - sx);
           const spCount = skill.learnedSpells.length;
@@ -1065,7 +1331,7 @@ export class FULevelUpWizard {
               2.2,
               true,
               false,
-              isNewBranch ? 260 : null
+              isNewBranch ? 220 : null
             );
 
             const spNode = document.createElement("div");
@@ -1116,7 +1382,6 @@ export class FULevelUpWizard {
         }
       });
 
-      // Nó de Poder Heróico ao atingir 10 níveis na classe
       const heroicDist = 660;
       const hx = Math.cos(baseAngle) * heroicDist;
       const hy = Math.sin(baseAngle) * heroicDist;
@@ -1215,7 +1480,7 @@ export class FULevelUpWizard {
     this.removeHintElement();
     this.savedCamera = { pan: { ...this.pan }, zoom: this.zoom };
 
-    const targetZoom = 1.65;
+    const targetZoom = 1.6;
     const offsetLeft = -window.innerWidth * 0.22;
     this.zoom = targetZoom;
     this.pan = {
@@ -1225,8 +1490,8 @@ export class FULevelUpWizard {
 
     const canvasEl = this.root.querySelector("#fu-tree-canvas");
     if (canvasEl) {
-      canvasEl.classList.add("is-zoom-transition");
-      canvasEl.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
+      canvasEl.classList.add("is-smooth-dezoom");
+      canvasEl.style.transform = `translate3d(${this.pan.x}px, ${this.pan.y}px, 0) scale(${this.zoom})`;
     }
 
     this.inspectedSkill = { cls, skill };
@@ -1234,22 +1499,28 @@ export class FULevelUpWizard {
       if (this.inspectedSkill) {
         this.renderTreeStage();
       }
-    }, 220);
+    }, 240);
   }
 
   closeSkillShowcase() {
+    const fromPan = { ...this.pan };
+    const fromZoom = this.zoom;
+
     this.inspectedSkill = null;
     if (this.savedCamera) {
       this.pan = { ...this.savedCamera.pan };
       this.zoom = this.savedCamera.zoom;
       this.savedCamera = null;
     }
+
+    this.pendingDezoomTransition = {
+      fromPan,
+      fromZoom,
+      toPan: { ...this.pan },
+      toZoom: this.zoom
+    };
+
     this.renderTreeStage();
-    const canvasEl = this.root.querySelector("#fu-tree-canvas");
-    if (canvasEl) {
-      canvasEl.classList.add("is-zoom-transition");
-      setTimeout(() => canvasEl.classList.remove("is-zoom-transition"), 350);
-    }
   }
 
   buildSkillShowcaseHTML({ cls, skill }, info) {
@@ -1277,7 +1548,6 @@ export class FULevelUpWizard {
     return `
       <div class="fu-skill-showcase-backdrop" id="fu-skill-showcase-backdrop">
         <div class="fu-skill-showcase-container" id="fu-skill-showcase-container">
-          <!-- COLUNA ESQUERDA: MOLDURA DOURADA COM ÍCONE DA HABILIDADE E NOME EMBAIXO -->
           <div class="fu-showcase-left">
             <div class="fu-showcase-frame">
               <div class="fu-showcase-geo-ring ring-1"></div>
@@ -1297,7 +1567,6 @@ export class FULevelUpWizard {
             </div>
           </div>
 
-          <!-- COLUNA DIREITA: FUNDO PRETO SEMI-TRANSPARENTE, DESCRIÇÃO E BOTÃO SELECIONAR -->
           <div class="fu-showcase-right">
             <div class="fu-showcase-rail">
               <span class="fu-rail-dot top"></span>
@@ -1365,7 +1634,7 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (CENTRALIZADO + ÍCONES OFICIAIS DO SISTEMA)
+   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (APRENDIDOS NO FINAL + TAGS POR PALAVRA-CHAVE)
    * ========================================================================== */
   getSpellsForClass(classFuid, showAll = false) {
     const ownedSpells = this.actor.items.filter((i) => i.type === "spell");
@@ -1383,13 +1652,16 @@ export class FULevelUpWizard {
       }
     }
 
-    return pool.map((sp) => {
+    const mapped = pool.map((sp) => {
       const fuid = (sp.system?.fuid || "").trim().toLowerCase();
       const nameKey = sp.name.trim().toLowerCase();
       const alreadyKnown = (fuid && ownedKeys.has(fuid)) || ownedKeys.has(nameKey);
       const mpCost = sp.system?.cost?.amount || sp.system?.mpCost?.value || "0";
       const isOffensive = Boolean(sp.system?.isOffensive?.value || sp.system?.hasRoll?.value);
       const elements = detectSpellElements(sp);
+      const supportTags = detectSupportSpellTags(sp);
+      const statusTags = detectSpellStatusTags(sp);
+
       const targetMap = {
         single: "Uma criatura",
         multiple: "Múltiplos alvos",
@@ -1409,10 +1681,22 @@ export class FULevelUpWizard {
         mpCost,
         isOffensive,
         elements,
+        supportTags,
+        statusTags,
         targetLabel,
         description: sp.system?.description || ""
       };
     });
+
+    // Move feitiços já aprendidos para o final da lista, mantendo ordem alfabética PT-BR
+    mapped.sort((a, b) => {
+      if (a.alreadyKnown !== b.alreadyKnown) {
+        return a.alreadyKnown ? 1 : -1;
+      }
+      return a.name.localeCompare(b.name, "pt-BR");
+    });
+
+    return mapped;
   }
 
   buildSpellPickerHTML({ selection, showAllSpells }) {
@@ -1421,15 +1705,57 @@ export class FULevelUpWizard {
     const bannersHtml = spells
       .map((sp) => {
         const primaryEl = sp.elements[0] || null;
-        const elementsBadgesHtml = sp.elements
-          .map(
-            (el) => `
-            <span class="fu-el-pill" style="color: ${el.color}; background: ${el.bg}; border-color: ${el.border};">
-              ${renderSystemIcon(el.iconClass)} ${el.label}
-            </span>
-          `
-          )
-          .join("");
+
+        // Badges do cabeçalho:
+        // - Feitiços ofensivos: elementos detectados (Fogo, Raio, etc.) ou status se não tiver elemento
+        // - Feitiços de Suporte / Utilidade: tags detectadas por palavras-chave (Cura, Defesa, Resistência, etc.)
+        let badgesHtml = "";
+
+        if (sp.isOffensive) {
+          if (sp.elements.length > 0) {
+            badgesHtml += sp.elements
+              .map(
+                (el) => `
+                <span class="fu-el-pill" style="color: ${el.color}; background: ${el.bg}; border-color: ${el.border};">
+                  ${renderSystemIcon(el.iconClass)} ${el.label}
+                </span>
+              `
+              )
+              .join("");
+          } else if (sp.statusTags.length > 0) {
+            badgesHtml += sp.statusTags
+              .map(
+                (st) => `
+                <span class="fu-el-pill" style="color: ${st.color}; background: ${st.bg}; border-color: ${st.border};">
+                  ${renderSystemIcon(st.iconClass)} ${st.label}
+                </span>
+              `
+              )
+              .join("");
+          } else {
+            badgesHtml = `<span class="fu-el-pill neutral">${renderSystemIcon("fu-offensive")} Ofensivo</span>`;
+          }
+        } else {
+          const combinedSupport = [...sp.supportTags];
+          // Se o feitiço de suporte imbui um elemento específico (ex.: Arma Espiritual -> Luz), adiciona a tag do elemento
+          if (sp.elements.length === 1) {
+            combinedSupport.push(sp.elements[0]);
+          }
+
+          if (combinedSupport.length > 0) {
+            badgesHtml = combinedSupport
+              .map(
+                (tag) => `
+                <span class="fu-el-pill" style="color: ${tag.color}; background: ${tag.bg}; border-color: ${tag.border};">
+                  ${renderSystemIcon(tag.iconClass)} ${tag.label}
+                </span>
+              `
+              )
+              .join("");
+          } else {
+            badgesHtml = `<span class="fu-el-pill neutral">${renderSystemIcon("fu-spell")} Suporte / Utilidade</span>`;
+          }
+        }
 
         return `
           <div class="fu-banner-spell-card ${sp.alreadyKnown ? "is-known" : ""}" data-search="${sp.name.toLowerCase()}">
@@ -1442,7 +1768,6 @@ export class FULevelUpWizard {
                 ${sp.isOffensive ? "Feitiço Ofensivo" : "Feitiço Arcano"} • ${selection.className}
               </div>
 
-              <!-- Medalhão central com ícone do feitiço + ícone oficial do elemento -->
               <div class="fu-banner-medallion" style="${primaryEl ? `border-color: ${primaryEl.color}; box-shadow: 0 0 22px ${primaryEl.bg};` : ""}">
                 <img src="${sp.img}" alt="${sp.name}" />
                 ${
@@ -1455,14 +1780,7 @@ export class FULevelUpWizard {
               </div>
 
               <div class="fu-banner-rank-title">
-                ${
-                  elementsBadgesHtml ||
-                  `<span class="fu-el-pill neutral">${
-                    sp.isOffensive
-                      ? `${renderSystemIcon("fu-offensive")} Ofensivo`
-                      : `${renderSystemIcon("fu-spell")} Suporte / Utilidade`
-                  }</span>`
-                }
+                ${badgesHtml}
               </div>
 
               <div class="fu-banner-divider"></div>
@@ -1710,7 +2028,7 @@ export class FULevelUpWizard {
     const modal = document.getElementById("fu-class-picker-modal");
     if (modal) {
       modal.classList.add("is-closing");
-      await new Promise((r) => setTimeout(r, 260));
+      await new Promise((r) => setTimeout(r, 240));
     }
     this.classPickerOpen = false;
     this.renderTreeStage();
@@ -1807,9 +2125,9 @@ export class FULevelUpWizard {
     this.root.querySelector(".fu-tree-reset-cam").onclick = () => {
       this.pan = { x: 0, y: 0 };
       this.zoom = 1;
-      canvasEl.classList.add("is-zoom-transition");
-      canvasEl.style.transform = `translate(0px, 0px) scale(1)`;
-      setTimeout(() => canvasEl.classList.remove("is-zoom-transition"), 350);
+      canvasEl.classList.add("is-smooth-dezoom");
+      canvasEl.style.transform = `translate3d(0px, 0px, 0) scale(1)`;
+      setTimeout(() => canvasEl.classList.remove("is-smooth-dezoom"), 720);
     };
 
     viewport.addEventListener("contextmenu", (ev) => {
@@ -1833,7 +2151,7 @@ export class FULevelUpWizard {
         ev.preventDefault();
         const delta = ev.deltaY > 0 ? -0.08 : 0.08;
         this.zoom = Math.min(1.6, Math.max(0.5, Number((this.zoom + delta).toFixed(2))));
-        canvasEl.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
+        canvasEl.style.transform = `translate3d(${this.pan.x}px, ${this.pan.y}px, 0) scale(${this.zoom})`;
       },
       { passive: false }
     );
@@ -1855,7 +2173,6 @@ export class FULevelUpWizard {
       };
     }
 
-    // Eventos do Modal de Escolher Nova Classe
     if (this.classPickerOpen) {
       const classModal = this.root.querySelector("#fu-class-picker-modal");
       classModal?.addEventListener("click", (ev) => {
@@ -1885,7 +2202,7 @@ export class FULevelUpWizard {
           const modal = document.getElementById("fu-class-picker-modal");
           if (modal) {
             modal.classList.add("is-closing");
-            await new Promise((r) => setTimeout(r, 270));
+            await new Promise((r) => setTimeout(r, 240));
           }
 
           this.stagedNewClass = classDoc;
@@ -1896,7 +2213,6 @@ export class FULevelUpWizard {
       });
     }
 
-    // Eventos do Modal Grande de Inspeção de Habilidade (com Zoom)
     if (this.inspectedSkill) {
       const showcaseBackdrop = this.root.querySelector("#fu-skill-showcase-backdrop");
       showcaseBackdrop?.addEventListener("click", (ev) => {
@@ -1948,19 +2264,20 @@ export class FULevelUpWizard {
 
           confirmBtn.disabled = true;
 
-          // Animação elegante de saída do painel antes de retornar para a árvore
+          // Animação rápida e leve (sem backdrop-filter) enquanto salva os dados
           const backdrop = this.root.querySelector("#fu-skill-showcase-backdrop");
           if (backdrop) {
             backdrop.classList.add("is-confirm-exiting");
-            await new Promise((r) => setTimeout(r, 280));
           }
 
-          await this.commitAdvancement(selection);
+          await Promise.all([
+            this.commitAdvancement(selection),
+            new Promise((r) => setTimeout(r, 210))
+          ]);
         };
       }
     }
 
-    // Eventos do Modal de Seleção de Feitiços
     if (this.spellPickerContext) {
       const spellModal = this.root.querySelector("#fu-spell-picker-modal");
       spellModal?.addEventListener("click", (ev) => {
@@ -2013,7 +2330,6 @@ export class FULevelUpWizard {
       });
     }
 
-    // Eventos do Modal de Poderes Heróicos
     if (this.heroicPickerContext) {
       const heroicModal = this.root.querySelector("#fu-heroic-picker-modal");
       heroicModal?.addEventListener("click", (ev) => {
@@ -2102,10 +2418,6 @@ export class FULevelUpWizard {
     }
   }
 
-  /**
-   * Salva a classe, habilidade, feitiço e poder heróico e aciona a animação
-   * de retorno da habilidade para a árvore com preenchimento da bolinha verde.
-   */
   async commitAdvancement(selection) {
     try {
       let embeddedClassId = selection.actorClassItem?.id ?? null;
@@ -2188,7 +2500,10 @@ export class FULevelUpWizard {
         `${this.actor.name}: ${selection.className} — ${selection.skillName} (NP ${newSkillRank}/${maxSkillRank})${spellSuffix}${heroicSuffix} aplicado!`
       );
 
-      // Configura dados da animação de retorno da habilidade + preenchimento da bolinha verde
+      // Captura a câmera ampliada atual para iniciar a árvore nela e fazer o de-zoom fluido
+      const zoomedPan = { ...this.pan };
+      const zoomedScale = this.zoom;
+
       this.recentUpgradeAnim = {
         classFuid: selection.classFuid,
         skillFuid: selection.skillFuid,
@@ -2205,22 +2520,25 @@ export class FULevelUpWizard {
         this.pan = { ...this.savedCamera.pan };
         this.zoom = this.savedCamera.zoom;
         this.savedCamera = null;
+      } else {
+        this.pan = { x: 0, y: 0 };
+        this.zoom = 1;
       }
+
+      this.pendingDezoomTransition = {
+        fromPan: zoomedPan,
+        fromZoom: zoomedScale,
+        toPan: { ...this.pan },
+        toZoom: this.zoom
+      };
 
       refreshTopCenterTrigger(this.actor);
 
       const remaining = getPendingLevelInfo(this.actor).pending;
       this.renderTreeStage();
 
-      const canvasEl = this.root?.querySelector("#fu-tree-canvas");
-      if (canvasEl) {
-        canvasEl.classList.add("is-zoom-transition");
-        setTimeout(() => canvasEl.classList.remove("is-zoom-transition"), 450);
-      }
-
       if (remaining <= 0) {
-        // Deixa o jogador ver a bolinha verde preencher na árvore antes de encerrar
-        await new Promise((r) => setTimeout(r, 850));
+        await new Promise((r) => setTimeout(r, 950));
         await this.closeWithAnimation(true);
       }
     } catch (err) {
