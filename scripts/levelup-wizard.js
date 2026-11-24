@@ -20,27 +20,34 @@ const SPELL_GRANTING_FUIDS = new Set([
 ]);
 
 const ELEMENT_META = {
-  fire: { label: "Fogo", icon: "🔥", color: "#f97316", bg: "rgba(249, 115, 22, 0.22)", border: "rgba(249, 115, 22, 0.55)" },
-  ice: { label: "Gelo", icon: "❄️", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.22)", border: "rgba(56, 189, 248, 0.55)" },
-  bolt: { label: "Raio", icon: "⚡", color: "#facc15", bg: "rgba(250, 204, 21, 0.22)", border: "rgba(250, 204, 21, 0.55)" },
-  earth: { label: "Terra", icon: "🪨", color: "#a3e635", bg: "rgba(132, 204, 22, 0.2)", border: "rgba(132, 204, 22, 0.5)" },
-  air: { label: "Ar", icon: "🌪️", color: "#34d399", bg: "rgba(52, 211, 153, 0.2)", border: "rgba(52, 211, 153, 0.5)" },
-  light: { label: "Luz", icon: "✨", color: "#fef08a", bg: "rgba(254, 240, 138, 0.22)", border: "rgba(254, 240, 138, 0.55)" },
-  dark: { label: "Trevas", icon: "🌑", color: "#c084fc", bg: "rgba(192, 132, 252, 0.22)", border: "rgba(192, 132, 252, 0.55)" },
-  poison: { label: "Veneno", icon: "☠️", color: "#a855f7", bg: "rgba(168, 85, 247, 0.22)", border: "rgba(168, 85, 247, 0.55)" }
+  fire: { label: "Fogo", iconClass: "fu-fire", color: "#f97316", bg: "rgba(249, 115, 22, 0.22)", border: "rgba(249, 115, 22, 0.6)" },
+  ice: { label: "Gelo", iconClass: "fu-ice", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.22)", border: "rgba(56, 189, 248, 0.6)" },
+  bolt: { label: "Raio", iconClass: "fu-bolt", color: "#facc15", bg: "rgba(250, 204, 21, 0.22)", border: "rgba(250, 204, 21, 0.6)" },
+  earth: { label: "Terra", iconClass: "fu-earth", color: "#a3e635", bg: "rgba(132, 204, 22, 0.22)", border: "rgba(132, 204, 22, 0.55)" },
+  air: { label: "Ar", iconClass: "fu-air", color: "#34d399", bg: "rgba(52, 211, 153, 0.22)", border: "rgba(52, 211, 153, 0.55)" },
+  light: { label: "Luz", iconClass: "fu-light", color: "#fef08a", bg: "rgba(254, 240, 138, 0.22)", border: "rgba(254, 240, 138, 0.6)" },
+  dark: { label: "Trevas", iconClass: "fu-dark", color: "#c084fc", bg: "rgba(192, 132, 252, 0.22)", border: "rgba(192, 132, 252, 0.6)" },
+  poison: { label: "Veneno", iconClass: "fu-poison", color: "#e879f9", bg: "rgba(217, 70, 239, 0.22)", border: "rgba(217, 70, 239, 0.6)" }
 };
 
 const EFFECT_LABELS = {
-  slow: { label: "Lento", icon: "🐢" },
-  dazed: { label: "Confuso", icon: "💫" },
-  weak: { label: "Fraco", icon: "💔" },
-  shaken: { label: "Abalado", icon: "😰" },
-  enraged: { label: "Enfurecido", icon: "💢" },
-  poisoned: { label: "Envenenado", icon: "☠️" },
-  crisis: { label: "Crise", icon: "⚠️" },
-  guard: { label: "Protegido", icon: "🛡️" },
-  flying: { label: "Voando", icon: "🕊️" }
+  slow: { label: "Lento", iconClass: "fu-slow" },
+  dazed: { label: "Confuso", iconClass: "fu-dazed" },
+  weak: { label: "Fraco", iconClass: "fu-weak" },
+  shaken: { label: "Abalado", iconClass: "fu-shaken" },
+  enraged: { label: "Enfurecido", iconClass: "fu-enraged" },
+  poisoned: { label: "Envenenado", iconClass: "fu-poisoned" },
+  crisis: { label: "Crise", iconClass: "fu-crisis" },
+  guard: { label: "Protegido", iconClass: "fu-guard" },
+  flying: { label: "Voando", iconClass: "fu-flying" }
 };
+
+/**
+ * Renderiza um ícone oficial do sistema projectfu.
+ */
+function renderSystemIcon(iconClass, extraClass = "") {
+  return `<i class="fu-icon ${iconClass} fu-sys-glyph ${extraClass}" aria-hidden="true"></i>`;
+}
 
 /**
  * Calcula quantos níveis o personagem possui e quantos avanços já estão preenchidos.
@@ -61,37 +68,44 @@ export function getPendingLevelInfo(actor) {
 }
 
 /**
- * Limpa tags @ICON[...], @EFFECT[...], @GAIN[...], @LOSS[...], @DMG[...] e @UUID[...] do projectfu.
+ * Limpa e converte tags @ICON[...], @EFFECT[...], @GAIN[...], @LOSS[...], @DMG[...] e @UUID[...]
+ * usando os ícones oficiais do sistema projectfu.
  */
 function formatFUDescription(rawHtml = "") {
   if (!rawHtml) return "<p>Sem descrição disponível.</p>";
   return rawHtml
     .replace(/@ICON\[([^\]]+)\]/gi, (_, iconName) => {
+      const key = iconName.trim().toLowerCase();
       const map = {
-        offensive: "⚡ Ofensivo",
-        spell: "✦ Feitiço",
-        melee: "⚔ Corpo a Corpo",
-        ranged: "🏹 À Distância",
-        martial: "🛡 Marcial",
-        fire: "🔥 Fogo",
-        ice: "❄️ Gelo",
-        bolt: "⚡ Raio",
-        lightning: "⚡ Raio",
-        earth: "🪨 Terra",
-        air: "🌪️ Ar",
-        wind: "🌪️ Ar",
-        light: "✨ Luz",
-        dark: "🌑 Trevas",
-        poison: "☠️ Veneno"
+        offensive: { label: "Ofensivo", iconClass: "fu-offensive" },
+        spell: { label: "Feitiço", iconClass: "fu-spell" },
+        melee: { label: "Corpo a Corpo", iconClass: "fu-melee" },
+        ranged: { label: "À Distância", iconClass: "fu-ranged" },
+        martial: { label: "Marcial", iconClass: "fu-martial" },
+        physical: { label: "Físico", iconClass: "fu-physical" },
+        fire: { label: "Fogo", iconClass: "fu-fire" },
+        ice: { label: "Gelo", iconClass: "fu-ice" },
+        bolt: { label: "Raio", iconClass: "fu-bolt" },
+        lightning: { label: "Raio", iconClass: "fu-bolt" },
+        earth: { label: "Terra", iconClass: "fu-earth" },
+        air: { label: "Ar", iconClass: "fu-air" },
+        wind: { label: "Ar", iconClass: "fu-air" },
+        light: { label: "Luz", iconClass: "fu-light" },
+        dark: { label: "Trevas", iconClass: "fu-dark" },
+        poison: { label: "Veneno", iconClass: "fu-poison" }
       };
-      return `<span class="fu-inline-tag">${map[iconName.toLowerCase()] || iconName}</span>`;
+      const entry = map[key];
+      if (entry) {
+        return `<span class="fu-inline-tag">${renderSystemIcon(entry.iconClass)} ${entry.label}</span>`;
+      }
+      return `<span class="fu-inline-tag">${renderSystemIcon(`fu-${key}`)} ${iconName}</span>`;
     })
     .replace(/@EFFECT\[([^\]]+)\](?:\{([^}]+)\}|\[([^\]]+)\])?/gi, (_, effKey, curlyLabel, bracketLabel) => {
       const key = effKey.trim().toLowerCase();
       const found = EFFECT_LABELS[key];
       const text = curlyLabel || bracketLabel || (found ? found.label : effKey);
-      const icon = found ? found.icon : "✦";
-      return `<span class="fu-inline-effect">${icon} ${text}</span>`;
+      const iconClass = found ? found.iconClass : `fu-${key}`;
+      return `<span class="fu-inline-effect">${renderSystemIcon(iconClass)} ${text}</span>`;
     })
     .replace(/@(?:GAIN|LOSS|DMG)\[([^\]]+)\](?:\{([^}]+)\}|\[([^\]]+)\])?/gi, (_, expr, curlyLabel, bracketLabel) => {
       const label = curlyLabel || bracketLabel || expr;
@@ -103,37 +117,60 @@ function formatFUDescription(rawHtml = "") {
 }
 
 /**
- * Detecta os tipos de dano elemental de um feitiço a partir dos dados e da descrição.
+ * Detecta os tipos de dano elemental de um feitiço a partir de todos os campos do sistema
+ * e da descrição HTML normalizada.
  */
 function detectSpellElements(spellDoc) {
   const found = [];
   const addUnique = (key) => {
-    if (ELEMENT_META[key] && !found.some((item) => item.key === key)) {
-      found.push({ key, ...ELEMENT_META[key] });
+    const normalized = key === "lightning" ? "bolt" : key === "wind" ? "air" : key;
+    if (ELEMENT_META[normalized] && !found.some((item) => item.key === normalized)) {
+      found.push({ key: normalized, ...ELEMENT_META[normalized] });
     }
   };
 
-  const dmgType = (spellDoc?.system?.damage?.type || "").toLowerCase();
-  if (dmgType === "fire") addUnique("fire");
-  if (dmgType === "ice") addUnique("ice");
-  if (dmgType === "bolt" || dmgType === "lightning") addUnique("bolt");
-  if (dmgType === "earth") addUnique("earth");
-  if (dmgType === "air" || dmgType === "wind") addUnique("air");
-  if (dmgType === "light") addUnique("light");
-  if (dmgType === "dark") addUnique("dark");
-  if (dmgType === "poison") addUnique("poison");
+  // 1. Campos estruturados do projectfu (v2 / v3)
+  const candidateTypes = [
+    spellDoc?.system?.rollInfo?.damage?.type,
+    spellDoc?.system?.damage?.type,
+    spellDoc?.system?.damageType?.value,
+    spellDoc?.system?.damageType
+  ];
 
-  const plainDesc = (spellDoc?.system?.description || "")
+  for (const t of candidateTypes) {
+    if (typeof t === "string" && t.trim()) {
+      addUnique(t.trim().toLowerCase());
+    }
+  }
+
+  // 2. Enrichers brutos na descrição (@DMG[... fire], @ICON[bolt], etc.)
+  const rawDesc = spellDoc?.system?.description || "";
+  const dmgTagRegex = /@DMG\[[^\]]*\b(fire|ice|bolt|lightning|earth|air|wind|light|dark|poison)\b[^\]]*\]/gi;
+  let dmgMatch;
+  while ((dmgMatch = dmgTagRegex.exec(rawDesc)) !== null) {
+    addUnique(dmgMatch[1].toLowerCase());
+  }
+
+  const iconTagRegex = /@ICON\[(fire|ice|bolt|lightning|earth|air|wind|light|dark|poison)\]/gi;
+  let iconMatch;
+  while ((iconMatch = iconTagRegex.exec(rawDesc)) !== null) {
+    addUnique(iconMatch[1].toLowerCase());
+  }
+
+  // 3. Texto plano normalizado (removendo tags HTML como <strong> e espaços duplos)
+  const plainDesc = rawDesc
+    .replace(/&nbsp;/gi, " ")
     .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
     .toLowerCase();
 
   if (/\bdano de fogo\b|\bfogo dano\b|\bfire damage\b/.test(plainDesc)) addUnique("fire");
   if (/\bdano de gelo\b|\bgelo dano\b|\bice damage\b/.test(plainDesc)) addUnique("ice");
   if (/\bdano de raio\b|\braio dano\b|\bbolt damage\b|\blightning damage\b/.test(plainDesc)) addUnique("bolt");
   if (/\bdano de terra\b|\bterra dano\b|\bearth damage\b/.test(plainDesc)) addUnique("earth");
-  if (/\bdano de ar\b|\bar dano\b|\bvento\b|\bair damage\b|\bwind damage\b/.test(plainDesc)) addUnique("air");
+  if (/\bdano de ar\b|\bar dano\b|\bair damage\b|\bwind damage\b/.test(plainDesc)) addUnique("air");
   if (/\bdano de luz\b|\bluz dano\b|\blight damage\b/.test(plainDesc)) addUnique("light");
-  if (/\bdano de trevas\b|\btrevas dano\b|\bsombra\b|\bdark damage\b/.test(plainDesc)) addUnique("dark");
+  if (/\bdano de trevas\b|\btrevas dano\b|\bdark damage\b/.test(plainDesc)) addUnique("dark");
   if (/\bdano de veneno\b|\bveneno dano\b|\bpoison damage\b/.test(plainDesc)) addUnique("poison");
 
   return found;
@@ -223,12 +260,13 @@ export class FULevelUpWizard {
     this.isRightDragging = false;
     this.dragStart = { x: 0, y: 0 };
 
-    // Estados de seleção
+    // Estados de seleção e animações
     this.stagedNewClass = null;
     this.animateStagedSpawn = false;
-    this.inspectedSkill = null;      // { cls, skill }
-    this.spellPickerContext = null;  // { selection, showAllSpells }
-    this.heroicPickerContext = null; // { selection, activeTab: "exclusive" | "generic", standaloneClass: null }
+    this.recentUpgradeAnim = null; // { skillFuid, classFuid, newRank, skillImg, skillName, newSpellId }
+    this.inspectedSkill = null;
+    this.spellPickerContext = null;
+    this.heroicPickerContext = null;
     this.activeHint = null;
     this.classPickerOpen = false;
   }
@@ -400,6 +438,7 @@ export class FULevelUpWizard {
   getActorClassesData() {
     const ownedClasses = this.actor.items.filter((i) => i.type === "class");
     const ownedSkills = this.actor.items.filter((i) => i.type === "skill");
+    const ownedSpells = this.actor.items.filter((i) => i.type === "spell");
     const ownedHeroics = this.actor.items.filter((i) => i.type === "heroic");
     const advancements = Array.isArray(this.actor.system?.advancements) ? this.actor.system.advancements : [];
 
@@ -418,6 +457,34 @@ export class FULevelUpWizard {
 
         const currentRank = Number(actorSkill?.system?.level?.value ?? 0);
         const maxRank = Math.max(1, Number(poolSkill.system?.level?.max ?? actorSkill?.system?.level?.max ?? 1));
+        const grantsSpell = doesSkillGrantSpell(poolSkill);
+
+        // Coleta os feitiços aprendidos vinculados a esta habilidade para ramificação na árvore
+        const learnedSpells = [];
+        const seenSpellIds = new Set();
+
+        if (actorSkill) {
+          for (const adv of advancements) {
+            if (adv?.skill?.id === actorSkill.id && adv?.entries?.spell?.id) {
+              const spItem = ownedSpells.find((sp) => sp.id === adv.entries.spell.id);
+              if (spItem && !seenSpellIds.has(spItem.id)) {
+                seenSpellIds.add(spItem.id);
+                learnedSpells.push(spItem);
+              }
+            }
+          }
+        }
+
+        // Fallback: se a habilidade concede feitiços e o personagem já possui feitiços desta classe na ficha
+        if (grantsSpell && currentRank > 0) {
+          for (const spItem of ownedSpells) {
+            const spClass = (spItem.system?.class?.value || "").trim().toLowerCase();
+            if (spClass === fuid && !seenSpellIds.has(spItem.id)) {
+              seenSpellIds.add(spItem.id);
+              learnedSpells.push(spItem);
+            }
+          }
+        }
 
         return {
           poolDoc: poolSkill,
@@ -428,14 +495,14 @@ export class FULevelUpWizard {
           currentRank,
           maxRank,
           description: poolSkill.system?.description || "",
-          grantsSpell: doesSkillGrantSpell(poolSkill)
+          grantsSpell,
+          learnedSpells
         };
       });
 
       const investedPoints = skills.reduce((sum, s) => sum + s.currentRank, 0);
       const isMastered = investedPoints >= MAX_SKILLS_PER_CLASS;
 
-      // Verifica se essa classe já reivindicou um Poder Heróico nos avanços
       const ownedSkillIds = new Set(skills.map((s) => s.actorItem?.id).filter(Boolean));
       const claimedAdv = advancements.find(
         (adv) => adv?.entries?.heroic?.id && ownedSkillIds.has(adv?.skill?.id)
@@ -475,7 +542,8 @@ export class FULevelUpWizard {
           currentRank: 0,
           maxRank: Math.max(1, Number(poolSkill.system?.level?.max ?? 1)),
           description: poolSkill.system?.description || "",
-          grantsSpell: doesSkillGrantSpell(poolSkill)
+          grantsSpell: doesSkillGrantSpell(poolSkill),
+          learnedSpells: []
         }));
 
         list.push({
@@ -523,7 +591,6 @@ export class FULevelUpWizard {
       }
     };
 
-    // Listeners globais registrados apenas uma vez para o pan com botão direito
     this._onWindowMouseMove = (ev) => {
       if (!this.isRightDragging) return;
       this.pan.x = ev.clientX - this.dragStart.x;
@@ -680,10 +747,10 @@ export class FULevelUpWizard {
             </div>
 
             <div class="fu-reveal-actions fu-anim-delay-4">
-              <button type="button" class="fu-btn-open-tree">
-                <span class="fu-btn-icon"><i class="fas fa-project-diagram"></i></span>
-                <span class="fu-btn-label">Escolher Classe e Habilidades</span>
-                <span class="fu-btn-arrow"><i class="fas fa-arrow-right"></i></span>
+              <button type="button" class="fu-engraved-gold-cta">
+                <span class="fu-engraved-side left" aria-hidden="true"></span>
+                <span class="fu-engraved-label">ESCOLHER CLASSE E HABILIDADES</span>
+                <span class="fu-engraved-side right" aria-hidden="true"></span>
               </button>
             </div>
           </div>
@@ -692,7 +759,7 @@ export class FULevelUpWizard {
     `;
 
     this.root.querySelector(".fu-overlay-close-btn").onclick = () => this.closeWithAnimation(false);
-    this.root.querySelector(".fu-btn-open-tree").onclick = () => {
+    this.root.querySelector(".fu-engraved-gold-cta").onclick = () => {
       this.pan = { x: 0, y: 0 };
       this.zoom = 1;
       this.renderTreeStage();
@@ -700,13 +767,14 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * ETAPA 2: ÁRVORE RADIAL DE CLASSES E HABILIDADES
+   * ETAPA 2: ÁRVORE RADIAL DE CLASSES, HABILIDADES E RAMIFICAÇÕES DE FEITIÇOS
    * ========================================================================== */
   renderTreeStage() {
     this.stage = "tree";
     const info = getPendingLevelInfo(this.actor);
     const classesData = this.getActorClassesData();
     const canAddClass = classesData.length < MAX_CLASSES && !this.stagedNewClass;
+    const upgradeAnim = this.recentUpgradeAnim;
 
     this.root.innerHTML = `
       <div class="fu-tree-screen">
@@ -736,7 +804,7 @@ export class FULevelUpWizard {
         <div class="fu-tree-viewport" id="fu-tree-viewport">
           <div class="fu-tree-parallax-layer" id="fu-tree-parallax-layer">
             <div class="fu-tree-canvas" id="fu-tree-canvas" style="transform: translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom});">
-              <svg class="fu-tree-lines-svg" id="fu-tree-lines-svg" width="2400" height="2400" viewBox="-1200 -1200 2400 2400"></svg>
+              <svg class="fu-tree-lines-svg" id="fu-tree-lines-svg" width="2800" height="2800" viewBox="-1400 -1400 2800 2800"></svg>
               <div class="fu-tree-nodes-layer" id="fu-tree-nodes-layer"></div>
             </div>
           </div>
@@ -764,27 +832,29 @@ export class FULevelUpWizard {
       </div>
     `;
 
-    this.populateRadialTree(classesData, info);
+    this.populateRadialTree(classesData, info, upgradeAnim);
     this.bindTreeEvents();
 
     this.animateStagedSpawn = false;
+    this.recentUpgradeAnim = null;
   }
 
-  populateRadialTree(classesData, info) {
+  populateRadialTree(classesData, info, upgradeAnim = null) {
     const svg = this.root.querySelector("#fu-tree-lines-svg");
     const layer = this.root.querySelector("#fu-tree-nodes-layer");
     const parallaxLayer = this.root.querySelector("#fu-tree-parallax-layer");
     if (!svg || !layer) return;
 
-    [135, 310, 420].forEach((radius) => {
+    // Anéis guia orbitais ampliados
+    [165, 365, 490].forEach((radius) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("cx", "0");
       circle.setAttribute("cy", "0");
       circle.setAttribute("r", String(radius));
       circle.setAttribute("fill", "none");
-      circle.setAttribute("stroke", "rgba(255, 255, 255, 0.05)");
-      circle.setAttribute("stroke-width", "1");
-      circle.setAttribute("stroke-dasharray", "4 8");
+      circle.setAttribute("stroke", "rgba(255, 255, 255, 0.055)");
+      circle.setAttribute("stroke-width", "1.2");
+      circle.setAttribute("stroke-dasharray", "5 9");
       svg.appendChild(circle);
     });
 
@@ -818,11 +888,11 @@ export class FULevelUpWizard {
       const palette = cls.palette;
       const shouldSpawnAnimate = cls.isStaged && this.animateStagedSpawn;
 
-      const sectorDist = 135;
+      const sectorDist = 165;
       const sx = Math.cos(baseAngle) * sectorDist;
       const sy = Math.sin(baseAngle) * sectorDist;
 
-      this.appendSvgLine(svg, 0, 0, sx, sy, palette.primary, 3, true, cls.isStaged, shouldSpawnAnimate ? 0 : null);
+      this.appendSvgLine(svg, 0, 0, sx, sy, palette.primary, 3.5, true, cls.isStaged, shouldSpawnAnimate ? 0 : null);
 
       const classNode = document.createElement("div");
       classNode.className = [
@@ -836,7 +906,7 @@ export class FULevelUpWizard {
       classNode.style.left = `${sx}px`;
       classNode.style.top = `${sy}px`;
       classNode.style.borderColor = palette.primary;
-      classNode.style.boxShadow = `0 0 22px ${palette.glow}, inset 0 0 14px ${palette.bg}`;
+      classNode.style.boxShadow = `0 0 26px ${palette.glow}, inset 0 0 16px ${palette.bg}`;
       classNode.innerHTML = `
         ${cls.isStaged ? `<span class="fu-staged-badge">NOVA</span>` : ""}
         <img src="${cls.img}" alt="${cls.name}" />
@@ -852,7 +922,7 @@ export class FULevelUpWizard {
         const ratio = skills.length === 1 ? 0 : sIdx / (skills.length - 1) - 0.5;
         const skillAngle = baseAngle + ratio * maxSpread;
 
-        const tierRadius = sIdx % 2 === 0 ? 310 : 420;
+        const tierRadius = sIdx % 2 === 0 ? 365 : 490;
         const nx = Math.cos(skillAngle) * tierRadius;
         const ny = Math.sin(skillAngle) * tierRadius;
 
@@ -862,6 +932,11 @@ export class FULevelUpWizard {
         const canInvest = info.pending > 0 && !isMaxed && !isClassCapped;
         const spawnDelay = 120 + sIdx * 75;
 
+        const isJustUpgraded =
+          upgradeAnim &&
+          upgradeAnim.classFuid === cls.fuid &&
+          upgradeAnim.skillFuid === skill.fuid;
+
         this.appendSvgLine(
           svg,
           sx,
@@ -869,7 +944,7 @@ export class FULevelUpWizard {
           nx,
           ny,
           isUnlocked ? palette.primary : "rgba(148, 163, 184, 0.3)",
-          isUnlocked ? 2.5 : 1.5,
+          isUnlocked ? 3 : 1.8,
           isUnlocked,
           false,
           shouldSpawnAnimate ? spawnDelay : null
@@ -878,7 +953,8 @@ export class FULevelUpWizard {
         let dotsHtml = `<div class="fu-skill-dots">`;
         for (let d = 1; d <= skill.maxRank; d++) {
           const filledDot = d <= skill.currentRank;
-          dotsHtml += `<span class="fu-dot ${filledDot ? "is-filled" : ""}"></span>`;
+          const justFilledDot = isJustUpgraded && d === upgradeAnim.newRank;
+          dotsHtml += `<span class="fu-dot ${filledDot ? "is-filled" : ""} ${justFilledDot ? "is-just-filled" : ""}"></span>`;
         }
         dotsHtml += `</div>`;
 
@@ -888,7 +964,8 @@ export class FULevelUpWizard {
           isUnlocked ? "is-unlocked" : "is-locked",
           isMaxed ? "is-maxed" : "",
           canInvest ? "is-investable" : "",
-          shouldSpawnAnimate ? "fu-spawn-skill" : ""
+          shouldSpawnAnimate ? "fu-spawn-skill" : "",
+          isJustUpgraded ? "is-just-upgraded" : ""
         ]
           .filter(Boolean)
           .join(" ");
@@ -911,13 +988,24 @@ export class FULevelUpWizard {
           <div class="fu-skill-circle">
             <img src="${skill.img}" alt="${skill.name}" />
             ${skill.grantsSpell ? `<span class="fu-skill-spell-pin" title="Concede Feitiço">✦</span>` : ""}
+            ${isJustUpgraded ? `<span class="fu-upgrade-shockwave"></span><span class="fu-upgrade-float-tag">+1 NP</span>` : ""}
           </div>
           ${dotsHtml}
           <span class="fu-skill-ratio">${skill.currentRank}/${skill.maxRank}</span>
           <span class="fu-skill-title">${skill.name}</span>
         `;
 
-        // Efeito "Tela Viva": parallax suave na direção da habilidade no hover
+        // Animação do card/ícone voando da tela de detalhes de volta para o nó na árvore
+        if (isJustUpgraded) {
+          const ghost = document.createElement("div");
+          ghost.className = "fu-returning-skill-ghost";
+          ghost.style.setProperty("--target-x", `${nx}px`);
+          ghost.style.setProperty("--target-y", `${ny}px`);
+          ghost.innerHTML = `<img src="${skill.img}" alt="${skill.name}" />`;
+          layer.appendChild(ghost);
+          setTimeout(() => ghost.remove(), 750);
+        }
+
         skillEl.addEventListener("mouseenter", () => {
           if (!parallaxLayer || this.inspectedSkill) return;
           const dist = Math.hypot(nx, ny) || 1;
@@ -934,13 +1022,11 @@ export class FULevelUpWizard {
           parallaxLayer.style.setProperty("--parallax-y", "0px");
         });
 
-        // Clique Esquerdo direto: abre imediatamente o Zoom + Modal de Seleção
         skillEl.addEventListener("click", (ev) => {
           ev.stopPropagation();
           this.openSkillShowcase(cls, skill, nx, ny);
         });
 
-        // Clique Direito: hint rápido flutuante
         skillEl.addEventListener("contextmenu", (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -948,10 +1034,90 @@ export class FULevelUpWizard {
         });
 
         layer.appendChild(skillEl);
+
+        // ====================================================================
+        // RAMIFICAÇÕES DE FEITIÇOS APRENDIDOS A PARTIR DESTA HABILIDADE
+        // ====================================================================
+        if (skill.learnedSpells && skill.learnedSpells.length > 0) {
+          const outAngle = Math.atan2(ny - sy, nx - sx);
+          const spCount = skill.learnedSpells.length;
+          const arcSpread = Math.min(Math.PI * 0.95, Math.max(0.45, (spCount - 1) * 0.48));
+          const branchRadius = 132;
+
+          skill.learnedSpells.forEach((spellItem, spIdx) => {
+            const spOffset = spCount === 1 ? 0 : (spIdx / (spCount - 1) - 0.5) * arcSpread;
+            const spAngle = outAngle + spOffset;
+            const bx = nx + Math.cos(spAngle) * branchRadius;
+            const by = ny + Math.sin(spAngle) * branchRadius;
+
+            const elements = detectSpellElements(spellItem);
+            const primaryEl = elements[0] || null;
+            const branchStroke = primaryEl ? primaryEl.color : palette.primary;
+            const isNewBranch = upgradeAnim && upgradeAnim.newSpellId === spellItem.id;
+
+            this.appendSvgLine(
+              svg,
+              nx,
+              ny,
+              bx,
+              by,
+              branchStroke,
+              2.2,
+              true,
+              false,
+              isNewBranch ? 260 : null
+            );
+
+            const spNode = document.createElement("div");
+            spNode.className = [
+              "fu-spell-branch-node",
+              isNewBranch ? "fu-spawn-spell-branch" : ""
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            spNode.style.left = `${bx}px`;
+            spNode.style.top = `${by}px`;
+            if (isNewBranch) {
+              spNode.style.setProperty("--start-x", `${nx}px`);
+              spNode.style.setProperty("--start-y", `${ny}px`);
+              spNode.style.setProperty("--end-x", `${bx}px`);
+              spNode.style.setProperty("--end-y", `${by}px`);
+            }
+            spNode.style.setProperty("--branch-color", branchStroke);
+
+            spNode.innerHTML = `
+              <div class="fu-spell-branch-frame" style="border-color: ${branchStroke}; box-shadow: 0 0 14px ${primaryEl ? primaryEl.bg : palette.glow};">
+                <img src="${spellItem.img}" alt="${spellItem.name}" />
+                ${
+                  primaryEl
+                    ? `<span class="fu-spell-branch-el-pin" style="border-color: ${primaryEl.color};">
+                        ${renderSystemIcon(primaryEl.iconClass)}
+                      </span>`
+                    : ""
+                }
+              </div>
+              <span class="fu-spell-branch-label">${spellItem.name}</span>
+            `;
+
+            spNode.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              this.showSpellBranchHint(spellItem, skill, elements, ev.clientX, ev.clientY);
+            });
+
+            spNode.addEventListener("contextmenu", (ev) => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              this.showSpellBranchHint(spellItem, skill, elements, ev.clientX, ev.clientY);
+            });
+
+            layer.appendChild(spNode);
+          });
+        }
       });
 
-      // Botão / Nó de Poder Heróico ao atingir 10 níveis na classe
-      const heroicDist = 540;
+      // Nó de Poder Heróico ao atingir 10 níveis na classe
+      const heroicDist = 660;
       const hx = Math.cos(baseAngle) * heroicDist;
       const hy = Math.sin(baseAngle) * heroicDist;
 
@@ -962,7 +1128,7 @@ export class FULevelUpWizard {
         hx,
         hy,
         cls.isMastered ? "#fbbf24" : "rgba(255,255,255,0.12)",
-        cls.isMastered ? 3 : 1,
+        cls.isMastered ? 3 : 1.2,
         cls.isMastered,
         !cls.isMastered,
         shouldSpawnAnimate ? 380 : null
@@ -1008,7 +1174,6 @@ export class FULevelUpWizard {
           );
           return;
         }
-        // Abre seleção de Poder Heróico para classe já em 10/10
         this.heroicPickerContext = {
           selection: null,
           standaloneClass: cls,
@@ -1111,7 +1276,7 @@ export class FULevelUpWizard {
 
     return `
       <div class="fu-skill-showcase-backdrop" id="fu-skill-showcase-backdrop">
-        <div class="fu-skill-showcase-container">
+        <div class="fu-skill-showcase-container" id="fu-skill-showcase-container">
           <!-- COLUNA ESQUERDA: MOLDURA DOURADA COM ÍCONE DA HABILIDADE E NOME EMBAIXO -->
           <div class="fu-showcase-left">
             <div class="fu-showcase-frame">
@@ -1200,7 +1365,7 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (BANNER VERTICAL COM ELEMENTOS E STATUS)
+   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (CENTRALIZADO + ÍCONES OFICIAIS DO SISTEMA)
    * ========================================================================== */
   getSpellsForClass(classFuid, showAll = false) {
     const ownedSpells = this.actor.items.filter((i) => i.type === "spell");
@@ -1260,7 +1425,7 @@ export class FULevelUpWizard {
           .map(
             (el) => `
             <span class="fu-el-pill" style="color: ${el.color}; background: ${el.bg}; border-color: ${el.border};">
-              ${el.icon} ${el.label}
+              ${renderSystemIcon(el.iconClass)} ${el.label}
             </span>
           `
           )
@@ -1268,7 +1433,6 @@ export class FULevelUpWizard {
 
         return `
           <div class="fu-banner-spell-card ${sp.alreadyKnown ? "is-known" : ""}" data-search="${sp.name.toLowerCase()}">
-            <!-- Fitas douradas nos cantos superiores -->
             <span class="fu-banner-ribbon left"></span>
             <span class="fu-banner-ribbon right"></span>
 
@@ -1278,13 +1442,13 @@ export class FULevelUpWizard {
                 ${sp.isOffensive ? "Feitiço Ofensivo" : "Feitiço Arcano"} • ${selection.className}
               </div>
 
-              <!-- Medalhão central com ícone do feitiço + pin elemental -->
+              <!-- Medalhão central com ícone do feitiço + ícone oficial do elemento -->
               <div class="fu-banner-medallion" style="${primaryEl ? `border-color: ${primaryEl.color}; box-shadow: 0 0 22px ${primaryEl.bg};` : ""}">
                 <img src="${sp.img}" alt="${sp.name}" />
                 ${
                   primaryEl
                     ? `<span class="fu-medallion-element-badge" title="Dano de ${primaryEl.label}" style="border-color: ${primaryEl.color};">
-                        ${primaryEl.icon}
+                        ${renderSystemIcon(primaryEl.iconClass)}
                       </span>`
                     : ""
                 }
@@ -1293,13 +1457,16 @@ export class FULevelUpWizard {
               <div class="fu-banner-rank-title">
                 ${
                   elementsBadgesHtml ||
-                  `<span class="fu-el-pill neutral">${sp.isOffensive ? "⚡ Ofensivo" : "✦ Suporte / Utilidade"}</span>`
+                  `<span class="fu-el-pill neutral">${
+                    sp.isOffensive
+                      ? `${renderSystemIcon("fu-offensive")} Ofensivo`
+                      : `${renderSystemIcon("fu-spell")} Suporte / Utilidade`
+                  }</span>`
                 }
               </div>
 
               <div class="fu-banner-divider"></div>
 
-              <!-- Linhas de atributos estilo pergaminho dourado -->
               <div class="fu-banner-stats-rows">
                 <div class="fu-banner-stat-bar">
                   <span>Custo de PM</span>
@@ -1358,7 +1525,7 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * MODAL PODERES HERÓICOS (NÍVEL 10 NA CLASSE: EXCLUSIVOS OU GENÉRICOS)
+   * MODAL PODERES HERÓICOS (NÍVEL 10 NA CLASSE)
    * ========================================================================== */
   getHeroicSkillsForClass(classFuid, className) {
     const ownedHeroics = this.actor.items.filter((i) => i.type === "heroic");
@@ -1581,6 +1748,50 @@ export class FULevelUpWizard {
     hint.querySelector(".fu-hint-close").onclick = () => this.removeHintElement();
   }
 
+  showSpellBranchHint(spellItem, parentSkill, elements, clientX, clientY) {
+    this.removeHintElement();
+    this.activeHint = spellItem;
+
+    const mpCost = spellItem.system?.cost?.amount || spellItem.system?.mpCost?.value || "0";
+    const elementsHtml = elements
+      .map(
+        (el) => `
+        <span class="fu-el-pill" style="color: ${el.color}; background: ${el.bg}; border-color: ${el.border};">
+          ${renderSystemIcon(el.iconClass)} ${el.label}
+        </span>
+      `
+      )
+      .join("");
+
+    const hint = document.createElement("div");
+    hint.id = "fu-skill-hint-popover";
+    hint.innerHTML = `
+      <div class="fu-hint-header">
+        <img src="${spellItem.img}" alt="${spellItem.name}" />
+        <div>
+          <span class="fu-hint-class">Feitiço • ${parentSkill.name}</span>
+          <h4>${spellItem.name}</h4>
+        </div>
+        <span class="fu-hint-np">${mpCost} PM</span>
+        <button type="button" class="fu-hint-close"><i class="fas fa-times"></i></button>
+      </div>
+      ${elementsHtml ? `<div class="fu-hint-elements-row">${elementsHtml}</div>` : ""}
+      <div class="fu-hint-body">
+        ${formatFUDescription(spellItem.system?.description || "")}
+      </div>
+    `;
+
+    this.root.appendChild(hint);
+
+    const rect = hint.getBoundingClientRect();
+    const left = Math.min(window.innerWidth - rect.width - 20, Math.max(16, clientX + 14));
+    const top = Math.min(window.innerHeight - rect.height - 20, Math.max(70, clientY - 20));
+    hint.style.left = `${left}px`;
+    hint.style.top = `${top}px`;
+
+    hint.querySelector(".fu-hint-close").onclick = () => this.removeHintElement();
+  }
+
   removeHintElement() {
     const existing = document.getElementById("fu-skill-hint-popover");
     if (existing) existing.remove();
@@ -1689,7 +1900,6 @@ export class FULevelUpWizard {
     if (this.inspectedSkill) {
       const showcaseBackdrop = this.root.querySelector("#fu-skill-showcase-backdrop");
       showcaseBackdrop?.addEventListener("click", (ev) => {
-        // Clicar fora dos painéis (no fundo escuro) volta para a Skill Tree
         if (ev.target === showcaseBackdrop) {
           this.closeSkillShowcase();
         }
@@ -1714,6 +1924,7 @@ export class FULevelUpWizard {
             skillDoc: skill.poolDoc,
             actorSkillItem: skill.actorItem,
             skillName: skill.name,
+            skillFuid: skill.fuid,
             currentRank: skill.currentRank,
             maxRank: skill.maxRank,
             willReachMastery,
@@ -1721,7 +1932,6 @@ export class FULevelUpWizard {
             heroicDoc: null
           };
 
-          // Se a perícia concede feitiço (ex.: Magia Elemental), abre o grimório de feitiços
           if (skill.grantsSpell) {
             this.inspectedSkill = null;
             this.spellPickerContext = { selection, showAllSpells: false };
@@ -1729,7 +1939,6 @@ export class FULevelUpWizard {
             return;
           }
 
-          // Se este ponto completa 10/10 na classe, abre a escolha de Poder Heróico
           if (willReachMastery) {
             this.inspectedSkill = null;
             this.heroicPickerContext = { selection, standaloneClass: null, activeTab: "exclusive" };
@@ -1738,6 +1947,14 @@ export class FULevelUpWizard {
           }
 
           confirmBtn.disabled = true;
+
+          // Animação elegante de saída do painel antes de retornar para a árvore
+          const backdrop = this.root.querySelector("#fu-skill-showcase-backdrop");
+          if (backdrop) {
+            backdrop.classList.add("is-confirm-exiting");
+            await new Promise((r) => setTimeout(r, 280));
+          }
+
           await this.commitAdvancement(selection);
         };
       }
@@ -1784,7 +2001,6 @@ export class FULevelUpWizard {
             spellDoc
           };
 
-          // Se este avanço também completou 10/10 na classe, segue para Poder Heróico
           if (selection.willReachMastery) {
             this.spellPickerContext = null;
             this.heroicPickerContext = { selection, standaloneClass: null, activeTab: "exclusive" };
@@ -1849,9 +2065,6 @@ export class FULevelUpWizard {
     }
   }
 
-  /**
-   * Salva Poder Heróico avulso quando a classe já tinha atingido 10/10 anteriormente.
-   */
   async commitStandaloneHeroic(cls, heroicDoc) {
     try {
       const heroicData = heroicDoc.toObject();
@@ -1890,7 +2103,8 @@ export class FULevelUpWizard {
   }
 
   /**
-   * Salva a classe (se nova), a habilidade, o feitiço (se houver) e o Poder Heróico (se atingiu 10/10).
+   * Salva a classe, habilidade, feitiço e poder heróico e aciona a animação
+   * de retorno da habilidade para a árvore com preenchimento da bolinha verde.
    */
   async commitAdvancement(selection) {
     try {
@@ -1974,6 +2188,14 @@ export class FULevelUpWizard {
         `${this.actor.name}: ${selection.className} — ${selection.skillName} (NP ${newSkillRank}/${maxSkillRank})${spellSuffix}${heroicSuffix} aplicado!`
       );
 
+      // Configura dados da animação de retorno da habilidade + preenchimento da bolinha verde
+      this.recentUpgradeAnim = {
+        classFuid: selection.classFuid,
+        skillFuid: selection.skillFuid,
+        newRank: newSkillRank,
+        newSpellId: embeddedSpellId
+      };
+
       this.inspectedSkill = null;
       this.spellPickerContext = null;
       this.heroicPickerContext = null;
@@ -1988,9 +2210,17 @@ export class FULevelUpWizard {
       refreshTopCenterTrigger(this.actor);
 
       const remaining = getPendingLevelInfo(this.actor).pending;
-      if (remaining > 0) {
-        this.renderTreeStage();
-      } else {
+      this.renderTreeStage();
+
+      const canvasEl = this.root?.querySelector("#fu-tree-canvas");
+      if (canvasEl) {
+        canvasEl.classList.add("is-zoom-transition");
+        setTimeout(() => canvasEl.classList.remove("is-zoom-transition"), 450);
+      }
+
+      if (remaining <= 0) {
+        // Deixa o jogador ver a bolinha verde preencher na árvore antes de encerrar
+        await new Promise((r) => setTimeout(r, 850));
         await this.closeWithAnimation(true);
       }
     } catch (err) {
