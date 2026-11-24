@@ -8,14 +8,12 @@ const MODULE_ID = "fu-level-up-wizard";
 function findActorWithPendingLevel() {
   if (!game.user) return null;
 
-  // 1. Prioriza o personagem vinculado ao usuário (Player)
   const assigned = game.user.character;
   if (assigned && assigned.type === "character") {
     const info = getPendingLevelInfo(assigned);
     if (info.pending > 0) return assigned;
   }
 
-  // 2. Verifica tokens selecionados no canvas que o usuário é dono
   const controlled = canvas?.tokens?.controlled ?? [];
   for (const token of controlled) {
     const actor = token.actor;
@@ -25,7 +23,6 @@ function findActorWithPendingLevel() {
     }
   }
 
-  // 3. Se não for GM, verifica qualquer personagem em que o jogador tenha permissão de OWNER
   if (!game.user.isGM) {
     const owned = game.actors?.filter((a) => a.type === "character" && a.isOwner) ?? [];
     for (const actor of owned) {
@@ -38,7 +35,7 @@ function findActorWithPendingLevel() {
 }
 
 /**
- * Cria ou atualiza o botão de destaque no centro superior da tela.
+ * Cria ou atualiza o botão ornamentado no centro superior da tela.
  */
 export function refreshTopCenterTrigger(preferredActor = null) {
   let container = document.getElementById("fu-levelup-hud-trigger");
@@ -66,17 +63,72 @@ export function refreshTopCenterTrigger(preferredActor = null) {
   }
 
   container.innerHTML = `
-    <button type="button" class="fu-hud-levelup-btn" title="Abrir Assistente de Evolução de Nível">
-      <img class="fu-hud-avatar" src="${targetActor.img}" alt="${targetActor.name}" />
-      <div class="fu-hud-text">
-        <span class="fu-hud-kicker">✦ EVOLUÇÃO DISPONÍVEL</span>
-        <strong class="fu-hud-title">${targetActor.name} — Nível ${info.nextLevel}</strong>
+    <button type="button" class="fu-ornate-hud-btn" title="Abrir Assistente de Evolução de Nível">
+      <svg class="fu-ornate-frame-svg" viewBox="0 0 600 92" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="fuMetalBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#8c8275" />
+            <stop offset="25%" stop-color="#d6cbb8" />
+            <stop offset="50%" stop-color="#f5ecd8" />
+            <stop offset="75%" stop-color="#d6cbb8" />
+            <stop offset="100%" stop-color="#8c8275" />
+          </linearGradient>
+          <linearGradient id="fuInnerSilk" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#282230" />
+            <stop offset="50%" stop-color="#15121a" />
+            <stop offset="100%" stop-color="#0b090e" />
+          </linearGradient>
+        </defs>
+
+        <!-- Fundo escuro interno -->
+        <path d="M 46 22 L 554 22 L 568 46 L 554 70 L 46 70 L 32 46 Z" fill="url(#fuInnerSilk)" />
+
+        <!-- Moldura externa principal -->
+        <path d="M 44 20 L 274 20 L 300 5 L 326 20 L 556 20 L 574 46 L 556 72 L 326 72 L 300 82 L 274 72 L 44 72 L 26 46 Z"
+              fill="none" stroke="url(#fuMetalBorder)" stroke-width="3" stroke-linejoin="round" />
+
+        <!-- Linha interna dourada sutil -->
+        <path d="M 52 26 L 548 26 L 562 46 L 548 66 L 52 66 L 38 46 Z"
+              fill="none" stroke="rgba(250, 204, 21, 0.32)" stroke-width="1.2" />
+
+        <!-- Ornamentos pontiagudos laterais (Asas góticas) -->
+        <path d="M 44 20 C 26 16, 16 8, 12 22 C 22 28, 26 36, 26 46 C 26 56, 22 64, 12 70 C 16 84, 26 76, 44 72"
+              fill="none" stroke="url(#fuMetalBorder)" stroke-width="2.6" stroke-linecap="round" />
+        <path d="M 26 46 L 4 46 L 18 39 M 4 46 L 18 53"
+              fill="none" stroke="url(#fuMetalBorder)" stroke-width="2" stroke-linecap="round" />
+
+        <path d="M 556 20 C 574 16, 584 8, 588 22 C 578 28, 574 36, 574 46 C 574 56, 578 64, 588 70 C 584 84, 574 76, 556 72"
+              fill="none" stroke="url(#fuMetalBorder)" stroke-width="2.6" stroke-linecap="round" />
+        <path d="M 574 46 L 596 46 L 582 39 M 596 46 L 582 53"
+              fill="none" stroke="url(#fuMetalBorder)" stroke-width="2" stroke-linecap="round" />
+
+        <!-- Espinhos inferiores nos cantos -->
+        <path d="M 115 72 L 106 86 L 126 72" fill="url(#fuMetalBorder)" />
+        <path d="M 485 72 L 494 86 L 474 72" fill="url(#fuMetalBorder)" />
+
+        <!-- Brasão diamante central superior -->
+        <polygon points="300,7 310,17 300,27 290,17" fill="#18141f" stroke="url(#fuMetalBorder)" stroke-width="2.2" />
+        <circle cx="300" cy="17" r="2.5" fill="#facc15" />
+      </svg>
+
+      <div class="fu-ornate-content">
+        <div class="fu-ornate-avatar-wrap">
+          <img class="fu-ornate-avatar" src="${targetActor.img}" alt="${targetActor.name}" />
+        </div>
+
+        <div class="fu-ornate-text">
+          <span class="fu-ornate-kicker">✦ EVOLUÇÃO DISPONÍVEL ✦</span>
+          <strong class="fu-ornate-title">${targetActor.name} — Nível ${info.nextLevel}</strong>
+        </div>
+
+        <div class="fu-ornate-badge" title="Pontos de nível pendentes">
+          <span>+${info.pending}</span>
+        </div>
       </div>
-      <span class="fu-hud-badge">+${info.pending}</span>
     </button>
   `;
 
-  const btn = container.querySelector(".fu-hud-levelup-btn");
+  const btn = container.querySelector(".fu-ornate-hud-btn");
   btn.onclick = (ev) => {
     ev.preventDefault();
     ev.stopPropagation();
@@ -95,17 +147,14 @@ function injectSheetTrigger(app, html) {
   const root = html instanceof HTMLElement ? html : html[0];
   if (!root) return;
 
-  // Atualiza também o gatilho superior da tela se a ficha aberta tiver nível pendente
   if (info.pending > 0) {
     refreshTopCenterTrigger(actor);
   }
 
-  // Remove injeções antigas para evitar duplicidade
   root.querySelectorAll(".fu-sheet-levelup-banner, .fu-sheet-header-pill").forEach((el) => el.remove());
 
   if (info.pending <= 0) return;
 
-  // Indicador discreto no cabeçalho da ficha
   const header = root.querySelector(".sheet-header, header.window-header");
   if (header) {
     const pill = document.createElement("button");
@@ -119,7 +168,6 @@ function injectSheetTrigger(app, html) {
     header.appendChild(pill);
   }
 
-  // Botão de destaque na área de Avanços / Nível
   const advancementsTab =
     root.querySelector('.tab[data-tab="advancements"]') ||
     root.querySelector('.tab[data-tab="level"]') ||
