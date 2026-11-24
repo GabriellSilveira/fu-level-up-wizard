@@ -173,15 +173,15 @@
   white-space: nowrap;
 }
 
-/* Ícones oficiais do sistema projectfu dentro dos badges e textos */
+/* Ícones oficiais do sistema projectfu & Badges inline de Dano e Status */
 .fu-sys-glyph {
   display: inline-block;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  vertical-align: -3px;
+  vertical-align: -2px;
   flex-shrink: 0;
 }
 
@@ -198,17 +198,25 @@
   font-weight: 700;
 }
 
+.fu-inline-dmg,
 .fu-inline-effect {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 1px 8px;
+  gap: 4px;
+  padding: 0 6px;
+  margin: 0 1px;
   border-radius: 4px;
-  background: rgba(168, 85, 247, 0.2);
-  border: 1px solid rgba(192, 132, 252, 0.45);
-  color: #e9d5ff;
-  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.94em;
   font-weight: 800;
+  line-height: 1.35;
+  vertical-align: baseline;
+}
+
+.fu-inline-dmg .fu-sys-glyph,
+.fu-inline-effect .fu-sys-glyph {
+  width: 13px;
+  height: 13px;
 }
 
 /* ==========================================================================
@@ -232,13 +240,13 @@
 
 #fu-levelup-overlay.is-closing {
   pointer-events: none;
-  animation: fuOverlayCloseAnim 0.52s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fuOverlayCloseAnim 0.46s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes fuOverlayCloseAnim {
-  0% { opacity: 1; transform: scale(1); filter: brightness(1) blur(0px); }
-  45% { opacity: 0.85; transform: scale(1.025); filter: brightness(1.35) blur(2px); }
-  100% { opacity: 0; transform: scale(0.95); filter: brightness(0.4) blur(10px); }
+  0% { opacity: 1; transform: scale(1); filter: brightness(1); }
+  45% { opacity: 0.85; transform: scale(1.02); filter: brightness(1.25); }
+  100% { opacity: 0; transform: scale(0.95); filter: brightness(0.5); }
 }
 
 .fu-celebrate-close-banner {
@@ -249,11 +257,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: fuCelebratePop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fuCelebratePop 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fuCelebratePop {
-  from { opacity: 0; transform: scale(0.9); }
+  from { opacity: 0; transform: scale(0.92); }
   to { opacity: 1; transform: scale(1); }
 }
 
@@ -761,7 +769,7 @@
 }
 
 /* ==========================================================================
- * 4. ETAPA 2: ÁRVORE RADIAL (TAMANHO AMPLIADO + RAMIFICAÇÕES + ANIMAÇÃO)
+ * 4. ETAPA 2: ÁRVORE RADIAL (DE-ZOOM SUAVE + RAMIFICAÇÕES + BOLINHA VERDE)
  * ========================================================================== */
 .fu-tree-screen {
   position: relative;
@@ -782,7 +790,7 @@
   z-index: 30;
   height: 60px;
   padding: 0 24px;
-  background: rgba(8, 10, 16, 0.92);
+  background: rgba(8, 10, 16, 0.94);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
@@ -880,10 +888,11 @@
   width: 0;
   height: 0;
   transform-origin: 0 0;
+  will-change: transform;
 }
 
-.fu-tree-canvas.is-zoom-transition {
-  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+.fu-tree-canvas.is-smooth-dezoom {
+  transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .fu-tree-lines-svg {
@@ -899,7 +908,7 @@
   left: 0;
 }
 
-/* Núcleo Central Ampliado */
+/* Núcleo Central */
 .fu-radial-center-hub {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -967,7 +976,7 @@
   line-height: 1.45;
 }
 
-/* Setores das Classes Ampliados */
+/* Setores das Classes */
 .fu-class-sector-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1026,7 +1035,7 @@
   font-weight: 700;
 }
 
-/* Nós de Habilidades Ampliados */
+/* Nós de Habilidades */
 .fu-skill-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1144,21 +1153,20 @@
   border-color: #86efac;
 }
 
-/* Animação da bolinha verde preenchendo após escolher a habilidade */
 .fu-dot.is-just-filled {
-  animation: fuDotFillGreenBurst 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fuDotFillGreenBurst 0.88s cubic-bezier(0.16, 1, 0.3, 1) 0.14s forwards;
 }
 
 @keyframes fuDotFillGreenBurst {
   0% {
     background: #4b5563;
-    transform: scale(0.7);
+    transform: scale(0.75);
     box-shadow: 0 0 0 rgba(34, 197, 94, 0);
   }
   45% {
     background: #86efac;
-    transform: scale(1.85);
-    box-shadow: 0 0 22px #22c55e, 0 0 38px #4ade80;
+    transform: scale(1.9);
+    box-shadow: 0 0 24px #22c55e, 0 0 40px #4ade80;
   }
   100% {
     background: #22c55e;
@@ -1173,12 +1181,12 @@
   border-radius: 50%;
   border: 3px solid #4ade80;
   pointer-events: none;
-  animation: fuNodeShockwave 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fuNodeShockwave 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
 }
 
 @keyframes fuNodeShockwave {
   0% { transform: scale(0.85); opacity: 1; }
-  100% { transform: scale(1.85); opacity: 0; }
+  100% { transform: scale(1.9); opacity: 0; }
 }
 
 .fu-upgrade-float-tag {
@@ -1195,48 +1203,13 @@
   border-radius: 999px;
   white-space: nowrap;
   pointer-events: none;
-  animation: fuFloatUpTag 0.95s ease-out forwards;
+  animation: fuFloatUpTag 1s ease-out 0.12s forwards;
 }
 
 @keyframes fuFloatUpTag {
-  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.8); }
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.85); }
   25% { opacity: 1; transform: translate(-50%, -4px) scale(1.05); }
-  100% { opacity: 0; transform: translate(-50%, -24px) scale(0.95); }
-}
-
-/* Card fantasma voando da tela de zoom de volta para o nó da habilidade */
-.fu-returning-skill-ghost {
-  position: absolute;
-  left: var(--target-x);
-  top: var(--target-y);
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
-  border: 2px solid #facc15;
-  box-shadow: 0 0 36px rgba(250, 204, 21, 0.75);
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 25;
-  animation: fuSkillReturnToNode 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.fu-returning-skill-ghost img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-@keyframes fuSkillReturnToNode {
-  0% {
-    opacity: 0.95;
-    transform: translate(calc(-50% - 170px), calc(-50% - 30px)) scale(2.15);
-    border-radius: 16px;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1);
-    border-radius: 50%;
-  }
+  100% { opacity: 0; transform: translate(-50%, -26px) scale(0.95); }
 }
 
 .fu-skill-ratio {
@@ -1255,7 +1228,7 @@
   margin-top: 2px;
 }
 
-/* Sub-nós de Feitiços Ramificados da Habilidade */
+/* Sub-nós de Feitiços Ramificados */
 .fu-spell-branch-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1278,7 +1251,7 @@
   left: var(--start-x);
   top: var(--start-y);
   opacity: 0;
-  animation: fuSkillEmergeFromClass 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
+  animation: fuSkillEmergeFromClass 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.24s forwards;
 }
 
 .fu-spell-branch-frame {
@@ -1436,50 +1409,33 @@
 }
 
 /* ==========================================================================
- * 5. MODAL GRANDE DE INSPEÇÃO E SELEÇÃO DE HABILIDADE (ZOOM SHOWCASE)
+ * 5. MODAL GRANDE DE INSPEÇÃO E SELEÇÃO DE HABILIDADE (LEVE E FLUIDO)
  * ========================================================================== */
 .fu-skill-showcase-backdrop {
   position: fixed;
   inset: 0;
   z-index: 10030;
-  background: radial-gradient(circle at 30% 50%, rgba(12, 14, 20, 0.58), rgba(4, 5, 8, 0.92) 72%);
-  backdrop-filter: blur(4px);
+  background: radial-gradient(circle at 28% 50%, rgba(10, 12, 18, 0.62), rgba(4, 5, 8, 0.92) 72%);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  animation: fuShowcaseFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fuShowcaseFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fuShowcaseFadeIn {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .fu-skill-showcase-backdrop.is-confirm-exiting {
   pointer-events: none;
-  animation: fuShowcaseConfirmExit 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fuShowcaseConfirmExit 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes fuShowcaseConfirmExit {
-  0% { opacity: 1; backdrop-filter: blur(4px); }
-  100% { opacity: 0; backdrop-filter: blur(0px); }
-}
-
-.fu-skill-showcase-backdrop.is-confirm-exiting .fu-showcase-right {
-  animation: fuPanelSlideOutRight 0.26s ease forwards;
-}
-
-.fu-skill-showcase-backdrop.is-confirm-exiting .fu-showcase-left {
-  animation: fuPedestalShrinkToTree 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-@keyframes fuPanelSlideOutRight {
-  to { opacity: 0; transform: translateX(48px); }
-}
-
-@keyframes fuPedestalShrinkToTree {
-  to { opacity: 0; transform: scale(0.45) translate(-60px, -20px); }
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.94); }
 }
 
 .fu-skill-showcase-container {
@@ -1506,7 +1462,7 @@
   width: 340px;
   height: 390px;
   border: 1px solid rgba(212, 175, 55, 0.55);
-  background: linear-gradient(180deg, rgba(24, 20, 15, 0.65), rgba(10, 9, 8, 0.85));
+  background: linear-gradient(180deg, rgba(24, 20, 15, 0.72), rgba(10, 9, 8, 0.9));
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), inset 0 0 36px rgba(212, 175, 55, 0.12);
   display: flex;
   align-items: center;
@@ -1573,7 +1529,7 @@
   align-items: center;
   gap: 14px;
   padding: 8px 20px;
-  background: rgba(8, 9, 12, 0.92);
+  background: rgba(8, 9, 12, 0.94);
   border: 1px solid rgba(212, 175, 55, 0.45);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.9);
 }
@@ -1605,7 +1561,7 @@
   position: relative;
   height: 100%;
   max-height: 560px;
-  background: rgba(6, 8, 12, 0.88);
+  background: rgba(6, 8, 12, 0.92);
   border: 1px solid rgba(212, 175, 55, 0.35);
   border-left: 2px solid rgba(212, 175, 55, 0.65);
   padding: 28px 34px 26px 40px;
@@ -1712,7 +1668,7 @@
   overflow-y: auto;
   padding-right: 8px;
   font-size: 15px;
-  line-height: 1.62;
+  line-height: 1.65;
   color: #e2e8f0;
 }
 
@@ -1790,22 +1746,22 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  animation: fuModalFadeIn 0.26s ease forwards;
+  animation: fuModalFadeIn 0.24s ease forwards;
 }
 
 @keyframes fuModalFadeIn {
-  from { opacity: 0; transform: scale(0.96); }
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .fu-class-picker-modal.is-closing {
   pointer-events: none;
-  animation: fuModalFadeOut 0.26s ease forwards;
+  animation: fuModalFadeOut 0.24s ease forwards;
 }
 
 @keyframes fuModalFadeOut {
   from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(0.94); }
+  to { opacity: 0; transform: scale(0.95); }
 }
 
 .fu-class-picker-box {
@@ -1987,7 +1943,7 @@
 }
 
 /* ==========================================================================
- * 7. MODAL DE FEITIÇOS — BANNERS CENTRALIZADOS NA ÚLTIMA FILEIRA
+ * 7. MODAL DE FEITIÇOS — BANNERS CENTRALIZADOS + TAGS DE SUPORTE/DANO/STATUS
  * ========================================================================== */
 .fu-spell-toggle-all-btn {
   height: 36px;
@@ -2006,7 +1962,6 @@
   background: radial-gradient(circle at 50% 25%, #161d1c, #0a0d0d 75%);
 }
 
-/* Flex centralizado para que 1 ou 2 cards na última fileira fiquem alinhados ao centro */
 .fu-banner-cards-grid {
   flex: 1;
   overflow-y: auto;
@@ -2038,7 +1993,8 @@
 }
 
 .fu-banner-spell-card.is-known {
-  opacity: 0.58;
+  opacity: 0.55;
+  order: 10;
 }
 
 .fu-banner-ribbon {
@@ -2187,7 +2143,7 @@
   flex: 1;
   text-align: left;
   font-size: 12.5px;
-  line-height: 1.48;
+  line-height: 1.52;
   color: #d6cbb8;
   max-height: 145px;
   overflow-y: auto;
@@ -2331,7 +2287,7 @@
 .fu-heroic-card-desc {
   flex: 1;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.52;
   color: #e2e8f0;
   max-height: 180px;
   overflow-y: auto;
@@ -2365,7 +2321,7 @@
   padding: 40px 20px;
 }
 
-/* Hint Flutuante (Botão Direito na Habilidade ou Clique no Feitiço Ramificado) */
+/* Hint Flutuante */
 #fu-skill-hint-popover {
   position: fixed;
   z-index: 10050;
@@ -2435,7 +2391,7 @@
 .fu-hint-body {
   margin-top: 10px;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
   color: #cbd5e1;
   max-height: 240px;
   overflow-y: auto;
