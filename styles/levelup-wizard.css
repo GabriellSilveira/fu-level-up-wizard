@@ -1,84 +1,135 @@
 /* ==========================================================================
- * 1. GATILHO NO CENTRO SUPERIOR DA TELA & BANNER NA FICHA
+ * 1. BOTÃO ORNAMENTADO NO CENTRO SUPERIOR DA TELA & BANNER NA FICHA
  * ========================================================================== */
 #fu-levelup-hud-trigger {
   position: fixed;
-  top: 14px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 95;
   pointer-events: auto;
 }
 
-.fu-hud-levelup-btn {
+.fu-ornate-hud-btn {
+  position: relative;
+  width: 560px;
+  max-width: 92vw;
+  height: 84px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 7px 18px 7px 8px;
-  background: linear-gradient(135deg, rgba(12, 14, 22, 0.96), rgba(26, 30, 46, 0.96));
-  border: 1px solid rgba(250, 204, 21, 0.75);
-  border-radius: 999px;
-  color: #f8fafc;
-  cursor: pointer;
-  box-shadow: 0 0 24px rgba(250, 204, 21, 0.35), 0 8px 20px rgba(0, 0, 0, 0.65);
-  animation: fuHudPulse 2.4s infinite ease-in-out;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  justify-content: center;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 18px rgba(250, 204, 21, 0.25));
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
 }
 
-.fu-hud-levelup-btn:hover {
-  transform: scale(1.04);
-  box-shadow: 0 0 32px rgba(250, 204, 21, 0.65), 0 10px 24px rgba(0, 0, 0, 0.8);
+.fu-ornate-hud-btn:hover {
+  transform: scale(1.035);
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.92)) drop-shadow(0 0 28px rgba(250, 204, 21, 0.55));
 }
 
-.fu-hud-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.fu-ornate-frame-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.fu-ornate-content {
+  position: relative;
+  z-index: 2;
+  width: 82%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 10px;
+}
+
+.fu-ornate-avatar-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  padding: 2px;
+  background: linear-gradient(135deg, #f5ecd8, #8c8275);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+}
+
+.fu-ornate-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
   object-fit: cover;
-  border: 2px solid #facc15;
+  display: block;
 }
 
-.fu-hud-text {
+.fu-ornate-text {
   display: flex;
   flex-direction: column;
-  text-align: left;
-  line-height: 1.15;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  min-width: 0;
 }
 
-.fu-hud-kicker {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #facc15;
-}
-
-.fu-hud-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.fu-hud-badge {
-  background: #facc15;
-  color: #090a0f;
+.fu-ornate-kicker {
+  font-size: 11px;
   font-weight: 800;
-  font-size: 12px;
-  padding: 3px 9px;
-  border-radius: 999px;
+  letter-spacing: 0.18em;
+  color: #facc15;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+  line-height: 1.2;
 }
 
-@keyframes fuHudPulse {
-  0%, 100% { box-shadow: 0 0 18px rgba(250, 204, 21, 0.32), 0 8px 20px rgba(0, 0, 0, 0.65); }
-  50% { box-shadow: 0 0 32px rgba(250, 204, 21, 0.65), 0 8px 22px rgba(0, 0, 0, 0.75); }
+.fu-ornate-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #f8fafc;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-top: 2px;
+}
+
+.fu-ornate-badge {
+  width: 36px;
+  height: 36px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #facc15, #ca8a04);
+  border: 2px solid #fef9c3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.65);
+  flex-shrink: 0;
+}
+
+.fu-ornate-badge span {
+  transform: rotate(-45deg);
+  color: #090a0f;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* Botões dentro da Ficha */
 .fu-sheet-header-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: linear-gradient(90deg, #ca8a04, #facc15);
   color: #0a0a0a;
   border: none;
   border-radius: 6px;
-  padding: 3px 10px;
+  padding: 4px 10px;
   font-size: 11px;
   font-weight: 800;
   cursor: pointer;
@@ -108,6 +159,10 @@
 }
 
 .fu-sheet-banner-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: linear-gradient(135deg, #facc15, #eab308);
   color: #090a0f;
   border: none;
@@ -119,7 +174,7 @@
 }
 
 /* ==========================================================================
- * 2. OVERLAY FULLSCREEN & ETAPA 1 (ANIMAÇÃO NOVO NÍVEL)
+ * 2. OVERLAY FULLSCREEN, LOADING EM ESPIRAL & ANIMAÇÃO DE FECHAMENTO
  * ========================================================================== */
 #fu-levelup-overlay {
   position: fixed;
@@ -129,7 +184,7 @@
   color: #f8fafc;
   font-family: "Signika", "Segoe UI", sans-serif;
   overflow: hidden;
-  animation: fuOverlayFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fuOverlayFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fuOverlayFadeIn {
@@ -137,11 +192,147 @@
   to { opacity: 1; }
 }
 
+#fu-levelup-overlay.is-closing {
+  pointer-events: none;
+  animation: fuOverlayCloseAnim 0.52s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fuOverlayCloseAnim {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1) blur(0px);
+  }
+  45% {
+    opacity: 0.85;
+    transform: scale(1.025);
+    filter: brightness(1.35) blur(2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+    filter: brightness(0.4) blur(10px);
+  }
+}
+
+/* Banner de celebração antes de fechar */
+.fu-celebrate-close-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 10100;
+  background: rgba(5, 6, 9, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fuCelebratePop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fuCelebratePop {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fu-celebrate-inner {
+  padding: 26px 48px;
+  border-top: 2px solid #facc15;
+  border-bottom: 2px solid #facc15;
+  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.16), transparent);
+  text-align: center;
+}
+
+.fu-celebrate-kicker {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  color: #facc15;
+  margin-bottom: 6px;
+}
+
+.fu-celebrate-inner strong {
+  font-size: 24px;
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(250, 204, 21, 0.5);
+}
+
+/* Loading State em Espiral */
+.fu-loading-screen {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 48%, rgba(250, 204, 21, 0.09), #050608 65%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.fu-spiral-loader {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fu-spiral-svg {
+  width: 140px;
+  height: 140px;
+  animation: fuSpiralSpin 1.45s linear infinite;
+  filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.55));
+}
+
+@keyframes fuSpiralSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.fu-spiral-core-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #facc15;
+  box-shadow: 0 0 16px #facc15, 0 0 30px #f59e0b;
+  animation: fuCorePulse 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes fuCorePulse {
+  from { transform: scale(0.8); opacity: 0.75; }
+  to { transform: scale(1.3); opacity: 1; }
+}
+
+.fu-loading-text-wrap {
+  text-align: center;
+}
+
+.fu-loading-kicker {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #facc15;
+  margin-bottom: 6px;
+}
+
+.fu-loading-label {
+  margin: 0;
+  font-size: 15px;
+  color: #cbd5e1;
+}
+
+/* ==========================================================================
+ * 3. ETAPA 1 (ANIMAÇÃO NOVO NÍVEL)
+ * ========================================================================== */
 .fu-overlay-close-btn {
   position: absolute;
   top: 22px;
   right: 28px;
   z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.22);
   color: #e2e8f0;
@@ -176,7 +367,6 @@
   gap: 24px;
 }
 
-/* Esquerda: Retrato do Personagem */
 .fu-reveal-left {
   position: relative;
   height: 100%;
@@ -242,7 +432,6 @@
   font-weight: 600;
 }
 
-/* Direita: Novo Nível & Ganhos */
 .fu-reveal-right {
   display: flex;
   flex-direction: column;
@@ -366,7 +555,6 @@
   font-size: 13px;
 }
 
-/* Linhas de Vida e Mana */
 .fu-reveal-stats-list {
   display: flex;
   flex-direction: column;
@@ -386,10 +574,10 @@
   animation: fuStatSlideIn 0.55s ease forwards;
 }
 
-.fu-anim-delay-1 { animation-delay: 0.25s; }
-.fu-anim-delay-2 { animation-delay: 0.42s; }
-.fu-anim-delay-3 { animation-delay: 0.58s; }
-.fu-anim-delay-4 { animation-delay: 0.72s; }
+.fu-anim-delay-1 { animation-delay: 0.2s; }
+.fu-anim-delay-2 { animation-delay: 0.35s; }
+.fu-anim-delay-3 { animation-delay: 0.5s; }
+.fu-anim-delay-4 { animation-delay: 0.65s; }
 
 @keyframes fuStatSlideIn {
   from { opacity: 0; transform: translateX(28px); }
@@ -425,7 +613,6 @@
   font-size: 18px;
 }
 
-/* Barra de Progresso */
 .fu-reveal-progress-wrap {
   margin-bottom: 26px;
   opacity: 0;
@@ -465,7 +652,6 @@
   transition: width 0.5s ease;
 }
 
-/* Botão Escolher Classe e Habilidades */
 .fu-reveal-actions {
   opacity: 0;
   animation: fuStatSlideIn 0.55s ease forwards;
@@ -496,7 +682,7 @@
 }
 
 /* ==========================================================================
- * 3. ETAPA 2: ÁRVORE RADIAL DE CLASSES E HABILIDADES (FUNDO PRETO)
+ * 4. ETAPA 2: ÁRVORE RADIAL DE CLASSES E HABILIDADES (FUNDO PRETO)
  * ========================================================================== */
 .fu-tree-screen {
   position: relative;
@@ -525,6 +711,9 @@
 }
 
 .fu-tree-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: transparent;
   border: 1px solid rgba(250, 204, 21, 0.45);
   color: #facc15;
@@ -560,6 +749,9 @@
 }
 
 .fu-tree-reset-cam {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #e2e8f0;
@@ -583,7 +775,6 @@
   font-size: 15px;
 }
 
-/* Viewport & Canvas Panorâmico */
 .fu-tree-viewport {
   position: relative;
   flex: 1;
@@ -658,14 +849,42 @@
   object-fit: cover;
 }
 
+/* Texto limpo e alinhado quando o personagem ainda não tem classe */
+.fu-empty-constellation-hint {
+  position: absolute;
+  top: 105px;
+  left: 0;
+  transform: translateX(-50%);
+  width: 380px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.fu-empty-constellation-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #facc15;
+  margin-bottom: 6px;
+}
+
+.fu-empty-constellation-hint p {
+  margin: 0;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
 /* Setores das Classes */
 .fu-class-sector-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 94px;
-  padding: 7px 6px;
+  width: 98px;
+  padding: 8px 6px;
   border-radius: 12px;
-  background: rgba(12, 15, 24, 0.94);
+  background: rgba(12, 15, 24, 0.96);
   border: 2px solid #facc15;
   display: flex;
   flex-direction: column;
@@ -674,9 +893,21 @@
   z-index: 8;
 }
 
+.fu-staged-badge {
+  position: absolute;
+  top: -9px;
+  background: #facc15;
+  color: #090a0f;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 1px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+}
+
 .fu-class-sector-node img {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   object-fit: cover;
   margin-bottom: 4px;
@@ -686,7 +917,7 @@
   font-size: 11px;
   font-weight: 800;
   color: #ffffff;
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .fu-class-sector-lvl {
@@ -700,7 +931,7 @@
 .fu-skill-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 112px;
+  width: 116px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -755,12 +986,12 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #4b5563; /* Cinza para pontos não adquiridos */
+  background: #4b5563;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .fu-dot.is-filled {
-  background: #22c55e; /* Verde ao adquirir ponto */
+  background: #22c55e;
   box-shadow: 0 0 8px rgba(34, 197, 94, 0.85);
   border-color: #86efac;
 }
@@ -786,7 +1017,7 @@
   margin-top: 1px;
 }
 
-/* Botão Poder Heróico no Final da Árvore (10 skills) */
+/* Botão Poder Heróico no Final da Árvore */
 .fu-heroic-node-btn {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -812,12 +1043,12 @@
   box-shadow: 0 0 24px rgba(251, 191, 36, 0.65);
 }
 
-/* Rodapé: Botão Escolher Nova Classe & Barra de Confirmação */
+/* Rodapé: Botão Escolher Nova Classe perfeitamente alinhado + Barra de Confirmação */
 .fu-tree-bottombar {
   position: relative;
   z-index: 30;
-  min-height: 68px;
-  padding: 10px 24px;
+  min-height: 74px;
+  padding: 12px 24px;
   background: rgba(8, 10, 16, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
@@ -827,7 +1058,12 @@
 }
 
 .fu-new-class-btn {
-  padding: 12px 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 28px;
   border-radius: 10px;
   background: linear-gradient(135deg, #1e293b, #0f172a);
   border: 1px solid #38bdf8;
@@ -835,6 +1071,7 @@
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.04em;
+  line-height: 1;
   cursor: pointer;
   box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -846,9 +1083,26 @@
 }
 
 .fu-new-class-btn.fu-pulse-cta {
-  border-color: #facc15;
-  color: #fef08a;
-  box-shadow: 0 0 26px rgba(250, 204, 21, 0.45);
+  background: linear-gradient(135deg, #facc15, #eab308);
+  border-color: #fef08a;
+  color: #090a0f;
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.5);
+}
+
+.fu-cancel-staged-class-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  color: #fde047;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .fu-confirm-bar {
@@ -877,17 +1131,20 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #e2e8f0;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
 }
 
 .fu-btn-commit-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: #22c55e;
   border: none;
   color: #052e16;
   font-weight: 800;
-  padding: 7px 16px;
+  padding: 8px 18px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -961,7 +1218,9 @@
   overflow-y: auto;
 }
 
-/* Modal Escolher Nova Classe */
+/* ==========================================================================
+ * 5. MODAL ENXUTA DE ESCOLHER NOVA CLASSE (ÍCONE + NOME + BOTÃO)
+ * ========================================================================== */
 .fu-class-picker-modal {
   position: fixed;
   inset: 0;
@@ -974,14 +1233,15 @@
 }
 
 .fu-class-picker-box {
-  width: min(1120px, 94vw);
-  height: min(760px, 88vh);
+  width: min(1060px, 94vw);
+  height: min(740px, 86vh);
   background: #0b0d14;
   border: 1px solid rgba(250, 204, 21, 0.45);
   border-radius: 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
 }
 
 .fu-picker-header {
@@ -996,10 +1256,11 @@
 .fu-picker-header h3 {
   margin: 0;
   color: #facc15;
+  font-size: 18px;
 }
 
 .fu-picker-header p {
-  margin: 2px 0 0;
+  margin: 3px 0 0;
   font-size: 12px;
   color: #94a3b8;
 }
@@ -1007,7 +1268,8 @@
 #fu-class-search-input {
   margin-left: auto;
   width: 240px;
-  padding: 7px 12px;
+  height: 36px;
+  padding: 0 12px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: #07090e;
@@ -1015,117 +1277,91 @@
 }
 
 .fu-picker-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #e2e8f0;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   cursor: pointer;
 }
 
-.fu-picker-grid {
+.fu-picker-simple-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 18px;
+  padding: 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 16px;
+  align-content: start;
 }
 
-.fu-picker-card {
-  background: #121624;
+.fu-picker-simple-card {
+  background: linear-gradient(180deg, #141929, #0e121d);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 18px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.fu-picker-card-top {
-  display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  text-align: center;
+  gap: 12px;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.fu-picker-card-top img {
-  width: 42px;
-  height: 42px;
-  border-radius: 8px;
+.fu-picker-simple-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(250, 204, 21, 0.65);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.7), 0 0 18px rgba(250, 204, 21, 0.18);
 }
 
-.fu-picker-card-top h4 {
+.fu-picker-simple-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 12px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+}
+
+.fu-picker-simple-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: 9px;
+  object-fit: cover;
+  display: block;
+}
+
+.fu-picker-simple-name {
   margin: 0;
   font-size: 16px;
+  font-weight: 800;
   color: #ffffff;
+  line-height: 1.2;
 }
 
-.fu-picker-source {
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-.fu-picker-benefits {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 12px;
-  color: #fde047;
-}
-
-.fu-picker-skill-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.fu-picker-skill-btn {
-  display: flex;
+.fu-choose-class-card-btn {
+  width: 100%;
+  height: 36px;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 6px;
-  color: #f1f5f9;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(234, 179, 8, 0.28));
+  border: 1px solid #facc15;
+  border-radius: 8px;
+  color: #fef08a;
   font-size: 12px;
-  text-align: left;
+  font-weight: 800;
+  letter-spacing: 0.03em;
   cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
-.fu-picker-skill-btn:hover {
-  border-color: #22c55e;
-  background: rgba(34, 197, 94, 0.16);
-}
-
-.fu-picker-skill-btn img {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-}
-
-.fu-empty-tree-prompt {
-  position: absolute;
-  top: 125px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  width: 300px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(250, 204, 21, 0.45);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.fu-empty-pick-class-btn {
-  margin-top: 10px;
+.fu-choose-class-card-btn:hover {
   background: #facc15;
   color: #090a0f;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 800;
-  cursor: pointer;
 }
