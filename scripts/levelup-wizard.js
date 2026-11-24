@@ -8,7 +8,7 @@ const CLASS_PALETTE = [
   { name: "violet",  primary: "#a855f7", glow: "rgba(168, 85, 247, 0.55)", bg: "rgba(107, 33, 168, 0.35)" }
 ];
 
-const MAX_CLASSES = 5;
+const MAX_CLASSES = 3;
 const MAX_SKILLS_PER_CLASS = 10;
 
 const SPELL_GRANTING_FUIDS = new Set([
@@ -17,6 +17,22 @@ const SPELL_GRANTING_FUIDS = new Set([
   "entropic-magic",
   "spell-mimic",
   "magisphere"
+]);
+
+/**
+ * Os 5 Poderes Heróicos Genéricos oficiais (e equivalentes em inglês)
+ */
+const GENERIC_HEROIC_NAMES = new Set([
+  "ambidestria",
+  "ambidexterity",
+  "pv extras",
+  "extra hp",
+  "feiticos extras",
+  "extra spells",
+  "pm extras",
+  "extra mp",
+  "pi extras",
+  "extra ip"
 ]);
 
 /**
@@ -1854,8 +1870,28 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * MODAL PODERES HERÓICOS (TODOS OS 8 EXCLUSIVOS + GENÉRICOS)
+   * MODAL PODERES HERÓICOS (5 GENÉRICOS NA ABA GENÉRICOS / RESTANTE NA EXCLUSIVA)
    * ========================================================================== */
+  isGenericHeroicPower(hDoc) {
+    const normName = normalizeTextKey(hDoc?.name || "");
+    if (GENERIC_HEROIC_NAMES.has(normName)) {
+      return true;
+    }
+
+    const rawSubtype =
+      hDoc?.system?.subtype?.value ??
+      hDoc?.system?.subtype ??
+      hDoc?.system?.category?.value ??
+      hDoc?.system?.category ??
+      "";
+    const normSubtype = normalizeTextKey(String(rawSubtype));
+    if (normSubtype === "generic" || normSubtype === "generico" || normSubtype === "general") {
+      return true;
+    }
+
+    return false;
+  }
+
   getHeroicSkillsForClass(classFuid, className) {
     const ownedHeroics = this.actor.items.filter((i) => i.type === "heroic");
     const ownedKeys = new Set(
@@ -1867,7 +1903,6 @@ export class FULevelUpWizard {
     const normTargetFuid = normalizeTextKey(classFuid);
     const normTargetName = normalizeTextKey(className);
 
-    // Conjuntos de aliases conhecidas de classes para cobrir suplementos em PT/EN
     const classAliases = new Set([normTargetFuid, normTargetName].filter(Boolean));
     const aliasPairs = [
       ["wayfarer", "andarilho"],
@@ -1876,16 +1911,16 @@ export class FULevelUpWizard {
       ["spiritist", "espiritualista"],
       ["arcanist", "arcanista"],
       ["chimerist", "quimerista"],
-      ["darkblade", "lamina sombria", "lâmina sombria"],
-      ["fury", "furia", "fúria"],
+      ["darkblade", "lamina sombria", "lâmina sombria", "guerreiro sombrio"],
+      ["fury", "furia", "fúria", "furioso"],
       ["guardian", "guardiao", "guardião"],
       ["loremaster", "erudito"],
       ["orator", "orador"],
       ["rogue", "ladino"],
       ["sharpshooter", "atirador"],
-      ["tinkerer", "engenhoqueiro"],
+      ["tinkerer", "engenhoqueiro", "inventor"],
       ["weaponmaster", "mestre de armas"],
-      ["chanter", "cantor"],
+      ["chanter", "cantor", "virtuoso"],
       ["commander", "comandante"],
       ["dancer", "dancarino", "dançarino"],
       ["symbolist", "simbolista"],
@@ -1914,10 +1949,15 @@ export class FULevelUpWizard {
       const nameKey = hDoc.name.trim().toLowerCase();
       const alreadyKnown = (fuid && ownedKeys.has(fuid)) || ownedKeys.has(nameKey);
 
-      const rawClassField = (hDoc.system?.class?.value ?? hDoc.system?.class ?? "").toString();
-      const normClassField = normalizeTextKey(rawClassField);
-      const requirementRaw = (hDoc.system?.requirement?.value || "").trim();
-      const normReq = normalizeTextKey(requirementRaw);
+      const requirementRaw = (
+        hDoc.system?.requirement?.value ??
+        hDoc.system?.requirement ??
+        hDoc.system?.requirements?.value ??
+        hDoc.system?.requirements ??
+        ""
+      )
+        .toString()
+        .trim();
 
       const mapped = {
         doc: hDoc,
@@ -1929,6 +1969,17 @@ export class FULevelUpWizard {
         description: hDoc.system?.description || ""
       };
 
+      // 1) Se for um dos 5 genéricos (Ambidestria, PV Extras, Feitiços Extras, PM Extras, PI Extras), vai APENAS para Genéricos
+      if (this.isGenericHeroicPower(hDoc)) {
+        generic.push(mapped);
+        continue;
+      }
+
+      // 2) Caso contrário, vai para Exclusivos da classe
+      const rawClassField = (hDoc.system?.class?.value ?? hDoc.system?.class ?? "").toString();
+      const normClassField = normalizeTextKey(rawClassField);
+      const normReq = normalizeTextKey(requirementRaw);
+
       const matchesClassField =
         normClassField &&
         Array.from(classAliases).some(
@@ -1936,28 +1987,15 @@ export class FULevelUpWizard {
         );
 
       const matchesRequirementField =
-        (!normClassField || normClassField === "none" || normClassField === "generic") &&
         normReq &&
         Array.from(classAliases).some((alias) => {
           const esc = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
           return new RegExp(`(?:^|[^a-z0-9])${esc}(?:$|[^a-z0-9])`).test(normReq);
         });
 
-      if (matchesClassField || matchesRequirementField) {
+      // Mostra os exclusivos que pertencem à classe (ou se o campo de classe estiver vazio/não especificado)
+      if (matchesClassField || matchesRequirementField || !normClassField || normClassField === "none") {
         exclusive.push(mapped);
-      } else if (!normClassField || normClassField === "none" || normClassField === "generic") {
-        // Verifica se não é exclusivo de outra classe citado no requisito
-        const isOtherClassExclusive = aliasPairs.some((group) => {
-          if (group.some((alias) => classAliases.has(normalizeTextKey(alias)))) return false;
-          return group.some((otherAlias) => {
-            const esc = normalizeTextKey(otherAlias).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            return new RegExp(`(?:^|[^a-z0-9])${esc}(?:$|[^a-z0-9])`).test(normReq);
-          });
-        });
-
-        if (!isOtherClassExclusive) {
-          generic.push(mapped);
-        }
       }
     }
 
