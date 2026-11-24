@@ -30,7 +30,7 @@ export function getPendingLevelInfo(actor) {
 }
 
 /**
- * Limpa tags @ICON[...] e formata HTML de descrições do projectfu para leitura limpa.
+ * Limpa tags @ICON[...] e @UUID[...] de descrições do projectfu para leitura limpa.
  */
 function formatFUDescription(rawHtml = "") {
   if (!rawHtml) return "<p>Sem descrição disponível.</p>";
@@ -50,45 +50,14 @@ function formatFUDescription(rawHtml = "") {
     });
 }
 
-/**
- * Gera resumo legível dos Benefícios Gratuitos da classe.
- */
-function getClassBenefitsList(classSystem) {
-  const list = [];
-  const res = classSystem?.benefits?.resources ?? {};
-  const mar = classSystem?.benefits?.martials ?? {};
-  const rit = classSystem?.benefits?.rituals ?? {};
-
-  if (res.hp?.value) list.push("+5 Pontos de Vida (PV) máximos");
-  if (res.mp?.value) list.push("+5 Pontos de Mente (PM) máximos");
-  if (res.ip?.value) list.push("+2 Pontos de Inventário (PI) máximos");
-
-  const martials = [];
-  if (mar.melee?.value) martials.push("Armas Marciais Corpo a Corpo");
-  if (mar.ranged?.value) martials.push("Armas Marciais à Distância");
-  if (mar.armor?.value) martials.push("Armaduras Marciais");
-  if (mar.shields?.value) martials.push("Escudos Marciais");
-  if (martials.length) list.push(`Equipar: ${martials.join(", ")}`);
-
-  const rituals = [];
-  if (rit.arcanism?.value) rituals.push("Arcanismo");
-  if (rit.chimerism?.value) rituals.push("Quimerismo");
-  if (rit.elementalism?.value) rituals.push("Elementalismo");
-  if (rit.entropism?.value) rituals.push("Entropismo");
-  if (rit.ritualism?.value) rituals.push("Ritualismo");
-  if (rit.spiritism?.value) rituals.push("Espiritismo");
-  if (rituals.length) list.push(`Rituais: ${rituals.join(", ")}`);
-
-  return list.length ? list : ["Nenhum benefício passivo adicional."];
-}
-
 export class FULevelUpWizard {
   static activeInstance = null;
+  static _cachedCatalog = null;
 
   static async open(actor) {
     if (!actor) return;
     if (this.activeInstance) {
-      this.activeInstance.close();
+      this.activeInstance.destroyImmediate();
     }
     const instance = new FULevelUpWizard(actor);
     this.activeInstance = instance;
@@ -98,7 +67,9 @@ export class FULevelUpWizard {
   constructor(actor) {
     this.actor = actor;
     this.root = null;
-    this.stage = "reveal"; // "reveal" | "tree"
+    this.stage = "loading"; // "loading" | "reveal" | "tree"
+    this.isClosing = false;
+
     this.catalog = {
       classes: [],
       skillsByUuid: new Map(),
@@ -112,22 +83,86 @@ export class FULevelUpWizard {
     this.dragMoved = false;
     this.dragStart = { x: 0, y: 0 };
 
+    // Nova classe colocada na árvore aguardando escolha de poder
+    this.stagedNewClass = null;
+
     // Seleção atual antes de confirmar
-    this.pendingSelection = null; // { classItemOrCompendium, skillDoc, isNewClass }
+    this.pendingSelection = null;
     this.activeHint = null;
     this.classPickerOpen = false;
   }
 
   async init() {
-    await this.loadCompendiumData();
+    // 1. Monta imediatamente o overlay com o Loading em Espiral para zero travamento visual
     this.mount();
-    this.renderRevealStage();
+    this.renderLoadingStage();
+
+    // Aguarda 2 frames de renderização para garantir que a espiral já esteja animando na tela
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    // 2. Carrega ou reutiliza o catálogo em cache
+    await this.loadCompendiumData();
+
+    // 3. Transiciona suavemente para a tela de Revelação de Nível
+    if (!this.isClosing && this.root) {
+      this.renderRevealStage();
+    }
   }
 
   /**
-   * Carrega todas as Classes e Perícias (Poderes) dos compêndios do projectfu e homebrew.
+   * Tela de carregamento em espiral exibida instantaneamente enquanto os compêndios são indexados.
+   */
+  renderLoadingStage() {
+    this.stage = "loading";
+    this.root.innerHTML = `
+      <div class="fu-loading-screen">
+        <div class="fu-spiral-loader" aria-hidden="true">
+          <svg class="fu-spiral-svg" viewBox="0 0 140 140">
+            <defs>
+              <linearGradient id="fuSpiralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#facc15" stop-opacity="1" />
+                <stop offset="55%" stop-color="#f59e0b" stop-opacity="0.65" />
+                <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <!-- Espiral logarítmica estilizada -->
+            <path
+              class="fu-spiral-path"
+              d="M 70 70
+                 C 70 64, 77 64, 77 70
+                 C 77 79, 63 79, 63 70
+                 C 63 56, 85 56, 85 70
+                 C 85 88, 54 88, 54 70
+                 C 54 46, 95 46, 95 70
+                 C 95 98, 43 98, 43 70
+                 C 43 34, 107 34, 107 70
+                 C 107 110, 31 110, 31 70
+                 C 31 21, 120 21, 120 70"
+              fill="none"
+              stroke="url(#fuSpiralGrad)"
+              stroke-width="3.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          <div class="fu-spiral-core-dot"></div>
+        </div>
+        <div class="fu-loading-text-wrap">
+          <span class="fu-loading-kicker">✦ PREPARANDO EVOLUÇÃO ✦</span>
+          <p class="fu-loading-label">Carregando grimório de classes e poderes...</p>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Carrega todas as Classes e Perícias (Poderes) dos compêndios do projectfu e homebrew (com cache).
    */
   async loadCompendiumData() {
+    if (FULevelUpWizard._cachedCatalog) {
+      this.catalog = FULevelUpWizard._cachedCatalog;
+      return;
+    }
+
     const classPacks = [];
     const skillPacks = [];
 
@@ -138,7 +173,6 @@ export class FULevelUpWizard {
       if (id.includes("skill") && !id.includes("heroic")) skillPacks.push(pack);
     }
 
-    // Carrega todas as skills primeiro para indexar por UUID e por class.value (fuid)
     for (const pack of skillPacks) {
       const docs = await pack.getDocuments();
       for (const doc of docs) {
@@ -158,7 +192,6 @@ export class FULevelUpWizard {
       }
     }
 
-    // Também inclui skills criadas diretamente no mundo (game.items)
     for (const item of game.items ?? []) {
       if (item.type !== "skill") continue;
       this.catalog.skillsByUuid.set(item.uuid, item);
@@ -174,7 +207,6 @@ export class FULevelUpWizard {
       }
     }
 
-    // Carrega todas as classes
     const seenFuids = new Set();
     for (const pack of classPacks) {
       const docs = await pack.getDocuments();
@@ -196,16 +228,16 @@ export class FULevelUpWizard {
     }
 
     this.catalog.classes.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    FULevelUpWizard._cachedCatalog = this.catalog;
   }
 
   /**
-   * Obtém todas as perícias pertencentes a uma classe (via @UUID na descrição + fuid).
+   * Obtém todas as perícias pertencentes a uma classe.
    */
   getSkillsForClass(classDoc) {
     const result = [];
     const seen = new Set();
 
-    // 1. Extrai links @UUID[...]{...} da descrição da classe na ordem exata do livro
     const desc = classDoc?.system?.description || "";
     const uuidRegex = /@UUID\[([^\]]+)\]/g;
     let match;
@@ -221,7 +253,6 @@ export class FULevelUpWizard {
       }
     }
 
-    // 2. Complementa com skills indexadas pelo fuid da classe
     const fuid = (classDoc?.system?.fuid || "").trim().toLowerCase();
     const byFuid = this.catalog.skillsByClassFuid.get(fuid) || [];
     for (const skillDoc of byFuid) {
@@ -236,17 +267,16 @@ export class FULevelUpWizard {
   }
 
   /**
-   * Retorna as classes atualmente presentes na ficha do personagem + contagem de níveis de poder nela.
+   * Retorna as classes atualmente na ficha + a classe nova recém-selecionada (se houver).
    */
   getActorClassesData() {
     const ownedClasses = this.actor.items.filter((i) => i.type === "class");
     const ownedSkills = this.actor.items.filter((i) => i.type === "skill");
 
-    return ownedClasses.map((clsItem, idx) => {
+    const list = ownedClasses.map((clsItem, idx) => {
       const fuid = (clsItem.system?.fuid || "").trim().toLowerCase();
       const classSkillPool = this.getSkillsForClass(clsItem);
 
-      // Mapeia cada skill da classe com seu nível atual na ficha
       const skills = classSkillPool.map((poolSkill) => {
         const poolFuid = (poolSkill.system?.fuid || "").trim().toLowerCase();
         const poolName = poolSkill.name.trim().toLowerCase();
@@ -267,15 +297,16 @@ export class FULevelUpWizard {
           fuid: poolFuid,
           currentRank,
           maxRank,
-          description: poolSkill.system?.description || "",
-          cost: poolSkill.system?.cost || {}
+          description: poolSkill.system?.description || ""
         };
       });
 
       const investedPoints = skills.reduce((sum, s) => sum + s.currentRank, 0);
 
       return {
+        isStaged: false,
         actorItem: clsItem,
+        compendiumDoc: clsItem,
         id: clsItem.id,
         name: clsItem.name,
         img: clsItem.img,
@@ -286,6 +317,42 @@ export class FULevelUpWizard {
         isMastered: investedPoints >= MAX_SKILLS_PER_CLASS
       };
     });
+
+    // Se o jogador escolheu uma nova classe na modal, coloca ela imediatamente na árvore para escolher o poder
+    if (this.stagedNewClass) {
+      const stagedFuid = (this.stagedNewClass.system?.fuid || this.stagedNewClass.name).trim().toLowerCase();
+      const alreadyOwned = list.some((c) => c.fuid === stagedFuid);
+
+      if (!alreadyOwned) {
+        const classSkillPool = this.getSkillsForClass(this.stagedNewClass);
+        const skills = classSkillPool.map((poolSkill) => ({
+          poolDoc: poolSkill,
+          actorItem: null,
+          name: poolSkill.name,
+          img: poolSkill.img,
+          fuid: (poolSkill.system?.fuid || "").trim().toLowerCase(),
+          currentRank: 0,
+          maxRank: Math.max(1, Number(poolSkill.system?.level?.max ?? 1)),
+          description: poolSkill.system?.description || ""
+        }));
+
+        list.push({
+          isStaged: true,
+          actorItem: null,
+          compendiumDoc: this.stagedNewClass,
+          id: null,
+          name: this.stagedNewClass.name,
+          img: this.stagedNewClass.img,
+          fuid: stagedFuid,
+          palette: CLASS_PALETTE[list.length % CLASS_PALETTE.length],
+          skills,
+          investedPoints: 0,
+          isMastered: false
+        });
+      }
+    }
+
+    return list;
   }
 
   mount() {
@@ -293,7 +360,6 @@ export class FULevelUpWizard {
     this.root.id = "fu-levelup-overlay";
     document.body.appendChild(this.root);
 
-    // Atalho ESC para fechar
     this._onKeyDown = (ev) => {
       if (ev.key === "Escape") {
         if (this.classPickerOpen) {
@@ -303,14 +369,14 @@ export class FULevelUpWizard {
           this.activeHint = null;
           this.removeHintElement();
         } else {
-          this.close();
+          this.closeWithAnimation(false);
         }
       }
     };
     window.addEventListener("keydown", this._onKeyDown);
   }
 
-  close() {
+  destroyImmediate() {
     window.removeEventListener("keydown", this._onKeyDown);
     if (this.root) {
       this.root.remove();
@@ -319,6 +385,34 @@ export class FULevelUpWizard {
     if (FULevelUpWizard.activeInstance === this) {
       FULevelUpWizard.activeInstance = null;
     }
+  }
+
+  /**
+   * Fecha a janela com animação suave (e opcionalmente um banner de conclusão).
+   */
+  async closeWithAnimation(celebrate = false) {
+    if (this.isClosing) return;
+    this.isClosing = true;
+
+    if (this.root && celebrate) {
+      const flash = document.createElement("div");
+      flash.className = "fu-celebrate-close-banner";
+      flash.innerHTML = `
+        <div class="fu-celebrate-inner">
+          <span class="fu-celebrate-kicker">✦ EVOLUÇÃO CONCLUÍDA ✦</span>
+          <strong>${this.actor.name} alcançou um novo patamar!</strong>
+        </div>
+      `;
+      this.root.appendChild(flash);
+      await new Promise((r) => setTimeout(r, 650));
+    }
+
+    if (this.root) {
+      this.root.classList.add("is-closing");
+      await new Promise((r) => setTimeout(r, 520));
+    }
+
+    this.destroyImmediate();
     refreshTopCenterTrigger();
   }
 
@@ -332,7 +426,6 @@ export class FULevelUpWizard {
     const curMaxHP = Number(this.actor.system?.resources?.hp?.max ?? 0);
     const curMaxMP = Number(this.actor.system?.resources?.mp?.max ?? 0);
 
-    // Em Fabula Ultima, cada nível de personagem aumenta +1 PV máx e +1 PM máx automaticamente
     const nextMaxHP = curMaxHP + 1;
     const nextMaxMP = curMaxMP + 1;
 
@@ -347,7 +440,6 @@ export class FULevelUpWizard {
         </button>
 
         <div class="fu-reveal-layout">
-          <!-- COLUNA ESQUERDA: RETRATO DO PERSONAGEM -->
           <div class="fu-reveal-left">
             <div class="fu-reveal-portrait-wrap">
               <img class="fu-reveal-portrait" src="${this.actor.img}" alt="${this.actor.name}" />
@@ -361,7 +453,6 @@ export class FULevelUpWizard {
             </div>
           </div>
 
-          <!-- COLUNA DIREITA: TÍTULO, GANHOS DE PV/PM E BOTÃO -->
           <div class="fu-reveal-right">
             <div class="fu-reveal-header-emblem">
               <div class="fu-triangle-emblem"></div>
@@ -384,7 +475,6 @@ export class FULevelUpWizard {
               <div class="fu-rank-diamond"><span>◆</span></div>
             </div>
 
-            <!-- CAMPOS DE AUMENTO DE VIDA E MANA -->
             <div class="fu-reveal-stats-list">
               <div class="fu-stat-row fu-anim-delay-1">
                 <span class="fu-stat-label">Aumento de Vida</span>
@@ -409,7 +499,6 @@ export class FULevelUpWizard {
               </div>
             </div>
 
-            <!-- BARRA DE PROGRESSO DO NÍVEL -->
             <div class="fu-reveal-progress-wrap fu-anim-delay-3">
               <div class="fu-progress-top">
                 <span class="fu-lv-label">NV <strong>${info.nextLevel}</strong></span>
@@ -421,7 +510,6 @@ export class FULevelUpWizard {
               </div>
             </div>
 
-            <!-- BOTÃO PRINCIPAL INFERIOR -->
             <div class="fu-reveal-actions fu-anim-delay-4">
               <button type="button" class="fu-btn-open-tree">
                 <span class="fu-btn-icon"><i class="fas fa-project-diagram"></i></span>
@@ -434,7 +522,7 @@ export class FULevelUpWizard {
       </div>
     `;
 
-    this.root.querySelector(".fu-overlay-close-btn").onclick = () => this.close();
+    this.root.querySelector(".fu-overlay-close-btn").onclick = () => this.closeWithAnimation(false);
     this.root.querySelector(".fu-btn-open-tree").onclick = () => {
       this.pan = { x: 0, y: 0 };
       this.zoom = 1;
@@ -443,17 +531,16 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * ETAPA 2: ÁRVORE RADIAL DE CLASSES E HABILIDADES (FUNDO PRETO + DRAG DIREITO)
+   * ETAPA 2: ÁRVORE RADIAL DE CLASSES E HABILIDADES
    * ========================================================================== */
   renderTreeStage() {
     this.stage = "tree";
     const info = getPendingLevelInfo(this.actor);
     const classesData = this.getActorClassesData();
-    const canAddClass = classesData.length < MAX_CLASSES;
+    const canAddClass = classesData.length < MAX_CLASSES && !this.stagedNewClass;
 
     this.root.innerHTML = `
       <div class="fu-tree-screen">
-        <!-- BARRA SUPERIOR -->
         <header class="fu-tree-topbar">
           <button type="button" class="fu-tree-back-btn">
             <i class="fas fa-angle-double-left"></i> VOLTAR
@@ -477,7 +564,6 @@ export class FULevelUpWizard {
           </div>
         </header>
 
-        <!-- VIEWPORT PANORÂMICO -->
         <div class="fu-tree-viewport" id="fu-tree-viewport">
           <div class="fu-tree-canvas" id="fu-tree-canvas" style="transform: translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom});">
             <svg class="fu-tree-lines-svg" id="fu-tree-lines-svg" width="2400" height="2400" viewBox="-1200 -1200 2400 2400"></svg>
@@ -485,12 +571,16 @@ export class FULevelUpWizard {
           </div>
         </div>
 
-        <!-- BARRA INFERIOR: ESCOLHER NOVA CLASSE + CONFIRMAÇÃO DE PONTO -->
         <footer class="fu-tree-bottombar">
           ${
-            canAddClass
+            this.stagedNewClass
+              ? `<button type="button" class="fu-cancel-staged-class-btn">
+                  <i class="fas fa-undo"></i> Trocar Nova Classe (${this.stagedNewClass.name})
+                </button>`
+              : canAddClass
               ? `<button type="button" class="fu-new-class-btn ${classesData.length === 0 ? "fu-pulse-cta" : ""}">
-                  <i class="fas fa-plus-circle"></i> Escolher Nova Classe (${classesData.length}/${MAX_CLASSES})
+                  <i class="fas fa-plus-circle"></i>
+                  <span>Escolher Nova Classe (${classesData.length}/${MAX_CLASSES})</span>
                 </button>`
               : `<div class="fu-max-classes-note">Limite máximo de 5 classes atingido</div>`
           }
@@ -519,19 +609,28 @@ export class FULevelUpWizard {
     `;
 
     this.populateRadialTree(classesData, info);
-    this.bindTreeEvents(classesData);
+    this.bindTreeEvents();
   }
 
-  /**
-   * Constrói o núcleo central (retrato + setores de classe), ramificações SVG, nós de habilidades,
-   * bolinhas de progresso e o botão de Poder Heróico ao completar 10 habilidades na classe.
-   */
   populateRadialTree(classesData, info) {
     const svg = this.root.querySelector("#fu-tree-lines-svg");
     const layer = this.root.querySelector("#fu-tree-nodes-layer");
     if (!svg || !layer) return;
 
-    // 1. Núcleo Central com Retrato do Personagem
+    // Anéis orbitais sutis no fundo do SVG para estética constelação
+    [135, 310, 420].forEach((radius) => {
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("cx", "0");
+      circle.setAttribute("cy", "0");
+      circle.setAttribute("r", String(radius));
+      circle.setAttribute("fill", "none");
+      circle.setAttribute("stroke", "rgba(255, 255, 255, 0.05)");
+      circle.setAttribute("stroke-width", "1");
+      circle.setAttribute("stroke-dasharray", "4 8");
+      svg.appendChild(circle);
+    });
+
+    // Núcleo Central com Retrato do Personagem
     const hub = document.createElement("div");
     hub.className = "fu-radial-center-hub";
     hub.innerHTML = `
@@ -542,24 +641,18 @@ export class FULevelUpWizard {
     `;
     layer.appendChild(hub);
 
+    // Estado sem classes: texto limpo, alinhado e sem caixas tortas
     if (classesData.length === 0) {
-      const emptyPrompt = document.createElement("div");
-      emptyPrompt.className = "fu-empty-tree-prompt";
-      emptyPrompt.innerHTML = `
-        <p>Este personagem ainda não possui nenhuma classe.</p>
-        <button type="button" class="fu-empty-pick-class-btn">
-          <i class="fas fa-hat-wizard"></i> Escolher Primeira Classe
-        </button>
+      const cleanGuide = document.createElement("div");
+      cleanGuide.className = "fu-empty-constellation-hint";
+      cleanGuide.innerHTML = `
+        <span class="fu-empty-constellation-title">Nenhuma classe vinculada</span>
+        <p>Clique em <strong>Escolher Nova Classe</strong> abaixo para iniciar sua árvore de poderes.</p>
       `;
-      emptyPrompt.querySelector("button").onclick = () => {
-        this.classPickerOpen = true;
-        this.renderTreeStage();
-      };
-      layer.appendChild(emptyPrompt);
+      layer.appendChild(cleanGuide);
       return;
     }
 
-    // Distribui os ângulos das classes ao redor do círculo (começando pelo topo: -90°)
     const count = classesData.length;
     const angleStep = (Math.PI * 2) / count;
     const startAngle = -Math.PI / 2;
@@ -568,29 +661,26 @@ export class FULevelUpWizard {
       const baseAngle = startAngle + cIdx * angleStep;
       const palette = cls.palette;
 
-      // Distância do setor da classe em relação ao retrato central
       const sectorDist = 135;
       const sx = Math.cos(baseAngle) * sectorDist;
       const sy = Math.sin(baseAngle) * sectorDist;
 
-      // Linha do centro até o setor da classe
-      this.appendSvgLine(svg, 0, 0, sx, sy, palette.primary, 3, true);
+      this.appendSvgLine(svg, 0, 0, sx, sy, palette.primary, 3, true, cls.isStaged);
 
-      // Nó/Setor da Classe (onde ficava "Type Name")
       const classNode = document.createElement("div");
-      classNode.className = "fu-class-sector-node";
+      classNode.className = `fu-class-sector-node ${cls.isStaged ? "is-staged-class" : ""}`;
       classNode.style.left = `${sx}px`;
       classNode.style.top = `${sy}px`;
       classNode.style.borderColor = palette.primary;
       classNode.style.boxShadow = `0 0 22px ${palette.glow}, inset 0 0 14px ${palette.bg}`;
       classNode.innerHTML = `
+        ${cls.isStaged ? `<span class="fu-staged-badge">NOVA</span>` : ""}
         <img src="${cls.img}" alt="${cls.name}" />
         <span class="fu-class-sector-name">${cls.name}</span>
         <span class="fu-class-sector-lvl">${cls.investedPoints}/${MAX_SKILLS_PER_CLASS}</span>
       `;
       layer.appendChild(classNode);
 
-      // Distribui as habilidades desta classe em leque/árvore radial
       const skills = cls.skills;
       const maxSpread = count === 1 ? Math.PI * 1.4 : Math.min(Math.PI * 0.72, angleStep * 0.82);
 
@@ -598,7 +688,6 @@ export class FULevelUpWizard {
         const ratio = skills.length === 1 ? 0 : sIdx / (skills.length - 1) - 0.5;
         const skillAngle = baseAngle + ratio * maxSpread;
 
-        // Alterna dois raios para evitar sobreposição entre nós vizinhos
         const tierRadius = sIdx % 2 === 0 ? 310 : 420;
         const nx = Math.cos(skillAngle) * tierRadius;
         const ny = Math.sin(skillAngle) * tierRadius;
@@ -613,7 +702,6 @@ export class FULevelUpWizard {
           this.pendingSelection.classFuid === cls.fuid &&
           this.pendingSelection.skillName === skill.name;
 
-        // Linha conectando o setor da classe à habilidade
         this.appendSvgLine(
           svg,
           sx,
@@ -625,7 +713,6 @@ export class FULevelUpWizard {
           isUnlocked || isSelected
         );
 
-        // Gera bolinhas cinzas/verdes abaixo do ícone
         let dotsHtml = `<div class="fu-skill-dots">`;
         for (let d = 1; d <= skill.maxRank; d++) {
           const filledDot = d <= skill.currentRank;
@@ -661,7 +748,6 @@ export class FULevelUpWizard {
           <span class="fu-skill-title">${skill.name}</span>
         `;
 
-        // Clique Esquerdo: seleciona a habilidade para investir 1 ponto
         skillEl.addEventListener("click", (ev) => {
           ev.stopPropagation();
           if (!canInvest) {
@@ -674,9 +760,9 @@ export class FULevelUpWizard {
           }
 
           this.pendingSelection = {
-            isNewClass: false,
+            isNewClass: cls.isStaged,
             actorClassItem: cls.actorItem,
-            classDoc: cls.actorItem,
+            classDoc: cls.compendiumDoc,
             className: cls.name,
             classFuid: cls.fuid,
             skillDoc: skill.poolDoc,
@@ -688,7 +774,6 @@ export class FULevelUpWizard {
           this.renderTreeStage();
         });
 
-        // Clique Direito (sem arrastar): exibe o Hint com a descrição da habilidade
         skillEl.addEventListener("contextmenu", (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -699,7 +784,7 @@ export class FULevelUpWizard {
         layer.appendChild(skillEl);
       });
 
-      // BOTÃO DE PODER HERÓICO NO FINAL DA ÁRVORE DA CLASSE (ao atingir 10 habilidades)
+      // Botão Poder Heróico ao atingir 10 habilidades na classe
       const heroicDist = 540;
       const hx = Math.cos(baseAngle) * heroicDist;
       const hy = Math.sin(baseAngle) * heroicDist;
@@ -759,9 +844,6 @@ export class FULevelUpWizard {
     svg.appendChild(line);
   }
 
-  /**
-   * Exibe um hint flutuante com a descrição completa da habilidade ao clicar com o botão direito.
-   */
   showSkillHint(skill, cls, clientX, clientY) {
     this.removeHintElement();
     this.activeHint = skill;
@@ -785,7 +867,6 @@ export class FULevelUpWizard {
 
     this.root.appendChild(hint);
 
-    // Posiciona dentro dos limites da tela
     const rect = hint.getBoundingClientRect();
     const left = Math.min(window.innerWidth - rect.width - 20, Math.max(16, clientX + 14));
     const top = Math.min(window.innerHeight - rect.height - 20, Math.max(70, clientY - 20));
@@ -802,7 +883,8 @@ export class FULevelUpWizard {
   }
 
   /**
-   * Modal para escolher uma nova classe (até o máximo de 5 classes).
+   * Modal enxuta de Escolha de Nova Classe:
+   * Exibe SOMENTE o card com ícone, nome da classe e o botão "Escolher essa Classe".
    */
   buildClassPickerHTML(ownedClassesData) {
     const ownedFuids = new Set(ownedClassesData.map((c) => c.fuid));
@@ -814,36 +896,15 @@ export class FULevelUpWizard {
     const cardsHtml = available
       .map((cls) => {
         const fuid = (cls.system?.fuid || cls.name).trim().toLowerCase();
-        const benefits = getClassBenefitsList(cls.system);
-        const skills = this.getSkillsForClass(cls);
-
         return `
-          <div class="fu-picker-card" data-class-fuid="${fuid}" data-search="${cls.name.toLowerCase()}">
-            <div class="fu-picker-card-top">
+          <div class="fu-picker-simple-card" data-search="${cls.name.toLowerCase()}">
+            <div class="fu-picker-simple-icon">
               <img src="${cls.img}" alt="${cls.name}" />
-              <div>
-                <h4>${cls.name}</h4>
-                <span class="fu-picker-source">${cls.system?.source || "Fabula Ultima"}</span>
-              </div>
             </div>
-            <ul class="fu-picker-benefits">
-              ${benefits.map((b) => `<li>✦ ${b}</li>`).join("")}
-            </ul>
-            <div class="fu-picker-skills-preview">
-              <strong>Poderes (${skills.length}):</strong>
-              <div class="fu-picker-skill-chips">
-                ${skills
-                  .map(
-                    (s) => `
-                    <button type="button" class="fu-picker-skill-btn" data-class-fuid="${fuid}" data-skill-uuid="${s.uuid}">
-                      <img src="${s.img}" alt="${s.name}" />
-                      <span>${s.name} (NP ${s.system?.level?.max ?? 1})</span>
-                    </button>
-                  `
-                  )
-                  .join("")}
-              </div>
-            </div>
+            <h4 class="fu-picker-simple-name">${cls.name}</h4>
+            <button type="button" class="fu-choose-class-card-btn" data-class-fuid="${fuid}">
+              Escolher essa Classe
+            </button>
           </div>
         `;
       })
@@ -855,12 +916,12 @@ export class FULevelUpWizard {
           <div class="fu-picker-header">
             <div>
               <h3>Escolher Nova Classe (${ownedClassesData.length + 1} de ${MAX_CLASSES})</h3>
-              <p>Selecione a nova classe e o primeiro Poder que deseja adquirir neste nível:</p>
+              <p>Escolha uma classe para adicioná-la à árvore radial e selecionar seu poder:</p>
             </div>
             <input type="search" id="fu-class-search-input" placeholder="Buscar classe..." />
-            <button type="button" class="fu-picker-close-btn"><i class="fas fa-times"></i></button>
+            <button type="button" class="fu-picker-close-btn" title="Fechar"><i class="fas fa-times"></i></button>
           </div>
-          <div class="fu-picker-grid" id="fu-picker-grid">
+          <div class="fu-picker-simple-grid" id="fu-picker-grid">
             ${cardsHtml || "<p>Nenhuma classe adicional encontrada nos compêndios.</p>"}
           </div>
         </div>
@@ -868,7 +929,7 @@ export class FULevelUpWizard {
     `;
   }
 
-  bindTreeEvents(classesData) {
+  bindTreeEvents() {
     const viewport = this.root.querySelector("#fu-tree-viewport");
     const canvasEl = this.root.querySelector("#fu-tree-canvas");
 
@@ -880,7 +941,6 @@ export class FULevelUpWizard {
       canvasEl.style.transform = `translate(0px, 0px) scale(1)`;
     };
 
-    // Arraste com o BOTÃO DIREITO do mouse
     viewport.addEventListener("contextmenu", (ev) => {
       ev.preventDefault();
     });
@@ -917,7 +977,6 @@ export class FULevelUpWizard {
       }
     });
 
-    // Zoom suave na roda do mouse
     viewport.addEventListener(
       "wheel",
       (ev) => {
@@ -929,7 +988,6 @@ export class FULevelUpWizard {
       { passive: false }
     );
 
-    // Botão Escolher Nova Classe
     const newClassBtn = this.root.querySelector(".fu-new-class-btn");
     if (newClassBtn) {
       newClassBtn.onclick = () => {
@@ -938,7 +996,18 @@ export class FULevelUpWizard {
       };
     }
 
-    // Eventos do Modal de Nova Classe
+    const cancelStagedBtn = this.root.querySelector(".fu-cancel-staged-class-btn");
+    if (cancelStagedBtn) {
+      cancelStagedBtn.onclick = () => {
+        this.stagedNewClass = null;
+        if (this.pendingSelection?.isNewClass) {
+          this.pendingSelection = null;
+        }
+        this.classPickerOpen = true;
+        this.renderTreeStage();
+      };
+    }
+
     if (this.classPickerOpen) {
       this.root.querySelector(".fu-picker-close-btn").onclick = () => {
         this.classPickerOpen = false;
@@ -948,41 +1017,29 @@ export class FULevelUpWizard {
       const searchInput = this.root.querySelector("#fu-class-search-input");
       searchInput?.addEventListener("input", (ev) => {
         const q = ev.target.value.trim().toLowerCase();
-        this.root.querySelectorAll(".fu-picker-card").forEach((card) => {
+        this.root.querySelectorAll(".fu-picker-simple-card").forEach((card) => {
           const match = card.dataset.search.includes(q);
           card.style.display = match ? "" : "none";
         });
       });
 
-      this.root.querySelectorAll(".fu-picker-skill-btn").forEach((btn) => {
+      this.root.querySelectorAll(".fu-choose-class-card-btn").forEach((btn) => {
         btn.onclick = () => {
           const classFuid = btn.dataset.classFuid;
-          const skillUuid = btn.dataset.skillUuid;
           const classDoc = this.catalog.classes.find(
             (c) => (c.system?.fuid || c.name).trim().toLowerCase() === classFuid
           );
-          const skillDoc = this.catalog.skillsByUuid.get(skillUuid);
-          if (!classDoc || !skillDoc) return;
+          if (!classDoc) return;
 
-          this.pendingSelection = {
-            isNewClass: true,
-            actorClassItem: null,
-            classDoc,
-            className: classDoc.name,
-            classFuid,
-            skillDoc,
-            actorSkillItem: null,
-            skillName: skillDoc.name,
-            currentRank: 0,
-            maxRank: Math.max(1, Number(skillDoc.system?.level?.max ?? 1))
-          };
+          // Coloca imediatamente a classe escolhida na árvore radial para selecionar o poder
+          this.stagedNewClass = classDoc;
+          this.pendingSelection = null;
           this.classPickerOpen = false;
           this.renderTreeStage();
         };
       });
     }
 
-    // Confirmação / Cancelamento da escolha do nível
     const cancelBtn = this.root.querySelector(".fu-btn-cancel-pick");
     if (cancelBtn) {
       cancelBtn.onclick = () => {
@@ -1001,17 +1058,13 @@ export class FULevelUpWizard {
   }
 
   /**
-   * Aplica a escolha na ficha do personagem exatamente na estrutura nativa do projectfu:
-   * - Cria o item de Classe (se nova classe)
-   * - Cria ou incrementa o nível (system.level.value) do item de Perícia (Poder)
-   * - Atualiza actor.system.advancements com os IDs embutidos corretos
+   * Salva a classe (se nova) e a habilidade na ficha do personagem no formato nativo do projectfu.
    */
   async commitAdvancement(selection) {
     try {
       let embeddedClassId = selection.actorClassItem?.id ?? null;
       let isNewClassEntry = false;
 
-      // 1. Se for uma classe nova, cria o item de Classe na ficha do ator
       if (selection.isNewClass) {
         const classData = selection.classDoc.toObject();
         delete classData._id;
@@ -1020,7 +1073,6 @@ export class FULevelUpWizard {
         isNewClassEntry = true;
       }
 
-      // 2. Cria ou evolui a Perícia (Poder) na ficha do ator
       let embeddedSkillId = selection.actorSkillItem?.id ?? null;
       let newSkillRank = 1;
       const maxSkillRank = selection.maxRank;
@@ -1038,7 +1090,6 @@ export class FULevelUpWizard {
         newSkillRank = 1;
       }
 
-      // 3. Registra o avanço no array nativo actor.system.advancements
       const advancements = foundry.utils.deepClone(this.actor.system?.advancements ?? []);
       const newEntry = {
         class: isNewClassEntry
@@ -1066,14 +1117,14 @@ export class FULevelUpWizard {
       );
 
       this.pendingSelection = null;
+      this.stagedNewClass = null;
       refreshTopCenterTrigger(this.actor);
 
-      // Se ainda restarem pontos pendentes, permanece na árvore para distribuir os próximos; senão fecha
       const remaining = getPendingLevelInfo(this.actor).pending;
       if (remaining > 0) {
         this.renderTreeStage();
       } else {
-        this.close();
+        await this.closeWithAnimation(true);
       }
     } catch (err) {
       console.error("fu-level-up-wizard | Erro ao aplicar avanço de nível:", err);
