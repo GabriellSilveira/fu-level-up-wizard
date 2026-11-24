@@ -173,6 +173,33 @@
   white-space: nowrap;
 }
 
+/* Tags inline de efeito / elemento */
+.fu-inline-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: rgba(250, 204, 21, 0.14);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  color: #fde047;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fu-inline-effect {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid rgba(192, 132, 252, 0.45);
+  color: #e9d5ff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 /* ==========================================================================
  * 2. OVERLAY FULLSCREEN, LOADING EM ESPIRAL & ANIMAÇÃO DE FECHAMENTO
  * ========================================================================== */
@@ -773,7 +800,6 @@
   cursor: grabbing;
 }
 
-/* Camada de Parallax Vivo ao passar o cursor nas habilidades */
 .fu-tree-parallax-layer {
   position: absolute;
   inset: 0;
@@ -876,7 +902,7 @@
   line-height: 1.45;
 }
 
-/* Setores das Classes + Spawn Animation */
+/* Setores das Classes */
 .fu-class-sector-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -897,14 +923,8 @@
 }
 
 @keyframes fuClassSectorSpawn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.25);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.25); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .fu-staged-badge {
@@ -941,7 +961,7 @@
   font-weight: 700;
 }
 
-/* Nós de Habilidades + Animação saindo da Classe */
+/* Nós de Habilidades */
 .fu-skill-node {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -989,9 +1009,7 @@
 }
 
 @keyframes fuLineDrawOut {
-  to {
-    stroke-dashoffset: 0;
-  }
+  to { stroke-dashoffset: 0; }
 }
 
 .fu-skill-circle {
@@ -1077,6 +1095,7 @@
   margin-top: 1px;
 }
 
+/* Nó Poder Heróico */
 .fu-heroic-node-btn {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -1093,6 +1112,7 @@
   font-weight: 800;
   cursor: pointer;
   z-index: 9;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .fu-heroic-node-btn.is-ready {
@@ -1100,6 +1120,24 @@
   color: #fef08a;
   background: linear-gradient(135deg, rgba(120, 53, 15, 0.95), rgba(180, 83, 9, 0.95));
   box-shadow: 0 0 24px rgba(251, 191, 36, 0.65);
+}
+
+.fu-heroic-node-btn.is-ready:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.fu-heroic-node-btn.is-claimed {
+  border-color: #facc15;
+  background: linear-gradient(135deg, #271f17, #14100c);
+  color: #f5e6c4;
+}
+
+.fu-heroic-claimed-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #facc15;
+  margin-bottom: 2px;
 }
 
 /* Rodapé */
@@ -1176,6 +1214,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   animation: fuShowcaseFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -1191,9 +1230,9 @@
   grid-template-columns: 45% 55%;
   gap: 28px;
   align-items: center;
+  cursor: default;
 }
 
-/* Esquerda: Moldura Dourada com Ícone da Habilidade + Nome embaixo */
 .fu-showcase-left {
   position: relative;
   height: 100%;
@@ -1303,7 +1342,6 @@
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
 }
 
-/* Direita: Fundo Preto Semi-Transparente + Descrição + Botão Selecionar */
 .fu-showcase-right {
   position: relative;
   height: 100%;
@@ -1314,7 +1352,7 @@
   padding: 28px 34px 26px 40px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9);
 }
 
@@ -1398,11 +1436,12 @@
   background: linear-gradient(90deg, #a68942, #f5e3a3);
 }
 
-.fu-showcase-spell-notice {
+.fu-showcase-spell-notice,
+.fu-showcase-heroic-notice {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 9px 14px;
   background: rgba(250, 204, 21, 0.12);
   border: 1px solid rgba(250, 204, 21, 0.45);
   color: #fef08a;
@@ -1451,7 +1490,6 @@
   color: #ffffff;
 }
 
-/* Botão Dourado Metálico "SELECIONAR" */
 .fu-showcase-select-btn {
   position: relative;
   flex: 1;
@@ -1459,9 +1497,9 @@
   background: linear-gradient(90deg, #9d803d 0%, #ead693 50%, #9d803d 100%);
   border: 1px solid #f7e9b7;
   color: #14110b;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 0 24px rgba(234, 214, 147, 0.35);
@@ -1482,7 +1520,7 @@
 }
 
 /* ==========================================================================
- * 6. MODAL DE ESCOLHER NOVA CLASSE (CARDS MARROM-DOURADOS ESTILO RPG)
+ * 6. MODAIS BASE & CARDS MARROM-DOURADOS (ESCOLHER NOVA CLASSE)
  * ========================================================================== */
 .fu-class-picker-modal {
   position: fixed;
@@ -1512,8 +1550,8 @@
 }
 
 .fu-class-picker-box {
-  width: min(1140px, 95vw);
-  height: min(760px, 88vh);
+  width: min(1180px, 95vw);
+  height: min(780px, 89vh);
   background: #0d0b09;
   border: 1px solid rgba(212, 175, 55, 0.55);
   border-radius: 12px;
@@ -1546,7 +1584,8 @@
 }
 
 #fu-class-search-input,
-#fu-spell-search-input {
+#fu-spell-search-input,
+#fu-heroic-search-input {
   margin-left: auto;
   width: 230px;
   height: 36px;
@@ -1580,7 +1619,6 @@
   align-content: start;
 }
 
-/* Card Marrom Desbotado com Borda Dourada e Losango no Topo */
 .fu-brown-class-card {
   position: relative;
   background: linear-gradient(180deg, #271f17 0%, #19130e 52%, #110d0a 100%);
@@ -1607,7 +1645,6 @@
   text-align: center;
 }
 
-/* Losango Dourado no Topo com Ícone da Classe */
 .fu-brown-diamond-crest {
   position: absolute;
   top: -30px;
@@ -1691,7 +1728,7 @@
 }
 
 /* ==========================================================================
- * 7. MODAL DE FEITIÇOS (3º PASSO PARA CONJURADORES)
+ * 7. MODAL DE FEITIÇOS — BANNERS VERTICAIS ESTILO REPUTATION / VOYAGES
  * ========================================================================== */
 .fu-spell-toggle-all-btn {
   height: 36px;
@@ -1706,114 +1743,355 @@
   white-space: nowrap;
 }
 
-.fu-spell-grid {
+.fu-banner-modal-box {
+  background: radial-gradient(circle at 50% 25%, #161d1c, #0a0d0d 75%);
+}
+
+.fu-banner-cards-grid {
   flex: 1;
   overflow-y: auto;
-  padding: 18px 22px;
+  padding: 24px 26px 28px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(305px, 1fr));
+  gap: 22px;
   align-content: start;
 }
 
-.fu-spell-card {
-  background: linear-gradient(180deg, #181522, #100e17);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  border-radius: 10px;
-  padding: 14px;
+.fu-banner-spell-card {
+  position: relative;
+  background: linear-gradient(180deg, #1b1815 0%, #110f0d 55%, #0c0a09 100%);
+  border: 2px solid rgba(214, 203, 184, 0.45);
+  padding: 6px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.85);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.fu-banner-spell-card:hover:not(.is-known) {
+  transform: translateY(-6px) scale(1.015);
+  border-color: #f5ecd8;
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.95), 0 0 26px rgba(212, 175, 55, 0.25);
+}
+
+.fu-banner-spell-card.is-known {
+  opacity: 0.58;
+}
+
+/* Fitas douradas nos cantos superiores */
+.fu-banner-ribbon {
+  position: absolute;
+  top: -2px;
+  width: 24px;
+  height: 24px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.fu-banner-ribbon.left {
+  left: -2px;
+  background: linear-gradient(135deg, #e5c158 50%, transparent 51%);
+}
+
+.fu-banner-ribbon.right {
+  right: -2px;
+  background: linear-gradient(225deg, #e5c158 50%, transparent 51%);
+}
+
+.fu-banner-card-frame {
+  height: 100%;
+  border: 1px solid rgba(214, 203, 184, 0.25);
+  padding: 18px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  text-align: center;
 }
 
-.fu-spell-card.is-known {
-  opacity: 0.6;
-  border-color: rgba(148, 163, 184, 0.3);
+.fu-banner-spell-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f5ecd8;
+  letter-spacing: 0.03em;
 }
 
-.fu-spell-card-header {
+.fu-banner-subtitle {
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-style: italic;
+  color: #a89f91;
+}
+
+/* Medalhão central do feitiço */
+.fu-banner-medallion {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  margin: 14px 0 10px;
+  border-radius: 18px;
+  padding: 5px;
+  background: radial-gradient(circle, #2a241d, #120f0c);
+  border: 2px solid #d4af37;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85);
+}
+
+.fu-banner-medallion img {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+}
+
+.fu-medallion-element-badge {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0d0b09;
+  border: 2px solid #facc15;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);
 }
 
-.fu-spell-card-header img {
-  width: 42px;
-  height: 42px;
-  border-radius: 8px;
-  border: 1px solid rgba(212, 175, 55, 0.45);
-}
-
-.fu-spell-card-meta h4 {
-  margin: 0;
-  font-size: 15px;
-  color: #f8fafc;
-}
-
-.fu-spell-tags {
+.fu-banner-rank-title {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 6px;
-  margin-top: 3px;
+  margin-bottom: 10px;
 }
 
-.fu-spell-tag {
-  font-size: 10px;
-  font-weight: 800;
-  padding: 1px 7px;
+.fu-el-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
   border-radius: 999px;
-}
-
-.fu-spell-tag.off {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-}
-
-.fu-spell-tag.mp {
-  background: rgba(56, 189, 248, 0.2);
-  color: #bae6fd;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-}
-
-.fu-spell-known-badge {
-  margin-left: auto;
-  font-size: 10px;
+  border: 1px solid;
+  font-size: 11px;
   font-weight: 800;
-  color: #4ade80;
-  background: rgba(34, 197, 94, 0.16);
-  border: 1px solid #22c55e;
-  padding: 2px 8px;
-  border-radius: 999px;
+  letter-spacing: 0.04em;
 }
 
-.fu-spell-card-desc {
-  flex: 1;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: #cbd5e1;
-  max-height: 150px;
-  overflow-y: auto;
+.fu-el-pill.neutral {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
-.fu-choose-spell-btn {
+.fu-banner-divider {
   width: 100%;
-  height: 36px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 203, 184, 0.45), transparent);
+  margin-bottom: 10px;
+}
+
+/* Barras de atributos estilo dourado */
+.fu-banner-stats-rows {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.fu-banner-stat-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 10px;
+  background: linear-gradient(90deg, rgba(196, 154, 69, 0.72), rgba(145, 110, 44, 0.45));
+  color: #141008;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.fu-banner-stat-bar strong {
+  color: #fffbeb;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.fu-banner-desc-scroll {
+  width: 100%;
+  flex: 1;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.48;
+  color: #d6cbb8;
+  max-height: 145px;
+  overflow-y: auto;
+  padding: 4px 4px 8px;
+  margin-bottom: 10px;
+}
+
+.fu-banner-desc-scroll p {
+  margin: 0 0 6px;
+}
+
+.fu-banner-select-btn {
+  width: 100%;
+  height: 38px;
   background: linear-gradient(90deg, #9d803d, #ead693, #9d803d);
   border: 1px solid #f7e9b7;
-  border-radius: 6px;
   color: #14110b;
   font-size: 12px;
   font-weight: 900;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
+  transition: filter 0.16s ease, transform 0.16s ease;
 }
 
-.fu-choose-spell-btn:disabled {
+.fu-banner-select-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.fu-banner-select-btn:disabled {
   background: #334155;
   border-color: #475569;
   color: #94a3b8;
   cursor: not-allowed;
+}
+
+/* ==========================================================================
+ * 8. MODAL DE PODERES HERÓICOS (EXCLUSIVOS DA CLASSE OU GENÉRICOS)
+ * ========================================================================== */
+.fu-heroic-tabs-bar {
+  display: flex;
+  gap: 10px;
+  padding: 12px 22px;
+  background: #120f0b;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.fu-heroic-tab-btn {
+  flex: 1;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.fu-heroic-tab-btn.is-active {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.22), rgba(180, 83, 9, 0.38));
+  border-color: #facc15;
+  color: #fef08a;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.22);
+}
+
+.fu-heroic-cards-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 22px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 16px;
+  align-content: start;
+}
+
+.fu-heroic-card {
+  background: linear-gradient(180deg, #211912, #120e0a);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.75);
+}
+
+.fu-heroic-card.is-known {
+  opacity: 0.58;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.fu-heroic-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fu-heroic-card-top img {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  border: 1.5px solid #facc15;
+  object-fit: cover;
+}
+
+.fu-heroic-type-badge {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #facc15;
+}
+
+.fu-heroic-card-top h4 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.fu-heroic-req {
+  padding: 5px 10px;
+  background: rgba(250, 204, 21, 0.1);
+  border-left: 2px solid #facc15;
+  font-size: 11.5px;
+  color: #fde68a;
+}
+
+.fu-heroic-card-desc {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.fu-choose-heroic-btn {
+  width: 100%;
+  height: 38px;
+  background: linear-gradient(90deg, #b45309, #facc15, #b45309);
+  border: 1px solid #fef08a;
+  border-radius: 6px;
+  color: #090a0f;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.fu-choose-heroic-btn:disabled {
+  background: #334155;
+  border-color: #475569;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.fu-empty-heroic-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px 20px;
 }
 
 /* Hint Flutuante (Botão Direito na Habilidade) */
@@ -1883,4 +2161,4 @@
   color: #cbd5e1;
   max-height: 240px;
   overflow-y: auto;
-}
+}v
