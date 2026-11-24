@@ -11,6 +11,14 @@ const CLASS_PALETTE = [
 const MAX_CLASSES = 5;
 const MAX_SKILLS_PER_CLASS = 10;
 
+const SPELL_GRANTING_FUIDS = new Set([
+  "elemental-magic",
+  "spiritual-magic",
+  "entropic-magic",
+  "spell-mimic",
+  "magisphere"
+]);
+
 /**
  * Calcula quantos níveis o personagem possui e quantos avanços já estão preenchidos.
  */
@@ -50,6 +58,55 @@ function formatFUDescription(rawHtml = "") {
     });
 }
 
+/**
+ * Extrai uma descrição breve e limpa da classe para o card marrom-dourado.
+ */
+function getClassBriefDescription(classDoc) {
+  const rawDesc = classDoc?.system?.description || "";
+  if (rawDesc) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = rawDesc;
+    const paragraphs = Array.from(tmp.querySelectorAll("p"));
+    for (const p of paragraphs) {
+      const text = (p.textContent || "").replace(/\s+/g, " ").trim();
+      if (text.length > 28 && !text.startsWith("@UUID") && !text.toLowerCase().startsWith("também")) {
+        return text.length > 138 ? `${text.slice(0, 135).trim()}...` : text;
+      }
+    }
+  }
+  const summary = (classDoc?.system?.summary?.value || "").trim();
+  return summary || "Classe jogável de Fabula Ultima com poderes únicos.";
+}
+
+/**
+ * Gera resumo curto dos benefícios gratuitos da classe.
+ */
+function getClassShortBenefitTag(classDoc) {
+  const res = classDoc?.system?.benefits?.resources ?? {};
+  const mar = classDoc?.system?.benefits?.martials ?? {};
+  const tags = [];
+  if (res.hp?.value) tags.push("+5 PV");
+  if (res.mp?.value) tags.push("+5 PM");
+  if (res.ip?.value) tags.push("+2 PI");
+  if (mar.melee?.value || mar.ranged?.value) tags.push("Armas Marciais");
+  if (mar.armor?.value || mar.shields?.value) tags.push("Armaduras/Escudos");
+  return tags.join(" • ") || "Poderes de Classe";
+}
+
+/**
+ * Verifica se uma perícia concede escolha de feitiço (ex.: Magia Elemental).
+ */
+function doesSkillGrantSpell(skillDoc) {
+  const traits = Array.isArray(skillDoc?.system?.traits) ? skillDoc.system.traits : [];
+  if (traits.includes("grant-spell")) return true;
+
+  const fuid = (skillDoc?.system?.fuid || "").trim().toLowerCase();
+  if (SPELL_GRANTING_FUIDS.has(fuid)) return true;
+
+  const desc = (skillDoc?.system?.description || "").toLowerCase();
+  return desc.includes("aprende um feitiço") || desc.includes("learn a") && desc.includes("spell");
+}
+
 export class FULevelUpWizard {
   static activeInstance = null;
   static _cachedCatalog = null;
@@ -67,43 +124,41 @@ export class FULevelUpWizard {
   constructor(actor) {
     this.actor = actor;
     this.root = null;
-    this.stage = "loading"; // "loading" | "reveal" | "tree"
+    this.stage = "loading";
     this.isClosing = false;
 
     this.catalog = {
       classes: [],
       skillsByUuid: new Map(),
-      skillsByClassFuid: new Map()
+      skillsByClassFuid: new Map(),
+      spells: []
     };
 
-    // Estado da árvore radial (pan & zoom)
+    // Estado da câmera da árvore radial (pan & zoom)
     this.pan = { x: 0, y: 0 };
     this.zoom = 1;
+    this.savedCamera = null;
     this.isRightDragging = false;
     this.dragMoved = false;
     this.dragStart = { x: 0, y: 0 };
 
-    // Nova classe colocada na árvore aguardando escolha de poder
+    // Estados de seleção
     this.stagedNewClass = null;
-
-    // Seleção atual antes de confirmar
-    this.pendingSelection = null;
+    this.animateStagedSpawn = false;
+    this.inspectedSkill = null; // { cls, skill } -> abre o modal grande com zoom
+    this.spellPickerContext = null; // { selection, showAllSpells } -> abre o grimório de feitiços
     this.activeHint = null;
     this.classPickerOpen = false;
   }
 
   async init() {
-    // 1. Monta imediatamente o overlay com o Loading em Espiral para zero travamento visual
     this.mount();
     this.renderLoadingStage();
 
-    // Aguarda 2 frames de renderização para garantir que a espiral já esteja animando na tela
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-    // 2. Carrega ou reutiliza o catálogo em cache
     await this.loadCompendiumData();
 
-    // 3. Transiciona suavemente para a tela de Revelação de Nível
     if (!this.isClosing && this.root) {
       this.renderRevealStage();
     }
@@ -125,7 +180,6 @@ export class FULevelUpWizard {
                 <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
               </linearGradient>
             </defs>
-            <!-- Espiral logarítmica estilizada -->
             <path
               class="fu-spiral-path"
               d="M 70 70
@@ -148,14 +202,14 @@ export class FULevelUpWizard {
         </div>
         <div class="fu-loading-text-wrap">
           <span class="fu-loading-kicker">✦ PREPARANDO EVOLUÇÃO ✦</span>
-          <p class="fu-loading-label">Carregando grimório de classes e poderes...</p>
+          <p class="fu-loading-label">Carregando grimório de classes, poderes e feitiços...</p>
         </div>
       </div>
     `;
   }
 
   /**
-   * Carrega todas as Classes e Perícias (Poderes) dos compêndios do projectfu e homebrew (com cache).
+   * Carrega Classes, Perícias e Feitiços apenas dos compêndios relevantes (otimizado via index).
    */
   async loadCompendiumData() {
     if (FULevelUpWizard._cachedCatalog) {
@@ -163,22 +217,36 @@ export class FULevelUpWizard {
       return;
     }
 
-    const classPacks = [];
-    const skillPacks = [];
-
+    const relevantPacks = [];
     for (const pack of game.packs) {
       if (pack.documentName !== "Item") continue;
-      const id = pack.collection.toLowerCase();
-      if (id.includes("class")) classPacks.push(pack);
-      if (id.includes("skill") && !id.includes("heroic")) skillPacks.push(pack);
+      const col = pack.collection.toLowerCase();
+      const hasRelevantType =
+        col.includes("class") ||
+        col.includes("skill") ||
+        col.includes("spell") ||
+        pack.index.some((entry) => entry.type === "class" || entry.type === "skill" || entry.type === "spell");
+
+      if (hasRelevantType && !col.includes("heroic")) {
+        relevantPacks.push(pack);
+      }
     }
 
-    for (const pack of skillPacks) {
+    const allDocs = [];
+    for (const pack of relevantPacks) {
       const docs = await pack.getDocuments();
-      for (const doc of docs) {
-        if (doc.type !== "skill") continue;
-        this.catalog.skillsByUuid.set(doc.uuid, doc);
+      allDocs.push(...docs);
+    }
+    for (const item of game.items ?? []) {
+      allDocs.push(item);
+    }
 
+    const seenClasses = new Set();
+    const seenSpells = new Set();
+
+    for (const doc of allDocs) {
+      if (doc.type === "skill") {
+        this.catalog.skillsByUuid.set(doc.uuid, doc);
         const classFuid = (doc.system?.class?.value || "").trim().toLowerCase();
         if (classFuid) {
           if (!this.catalog.skillsByClassFuid.has(classFuid)) {
@@ -189,51 +257,26 @@ export class FULevelUpWizard {
             arr.push(doc);
           }
         }
-      }
-    }
-
-    for (const item of game.items ?? []) {
-      if (item.type !== "skill") continue;
-      this.catalog.skillsByUuid.set(item.uuid, item);
-      const classFuid = (item.system?.class?.value || "").trim().toLowerCase();
-      if (classFuid) {
-        if (!this.catalog.skillsByClassFuid.has(classFuid)) {
-          this.catalog.skillsByClassFuid.set(classFuid, []);
+      } else if (doc.type === "class") {
+        const key = (doc.system?.fuid || doc.name).trim().toLowerCase();
+        if (!seenClasses.has(key)) {
+          seenClasses.add(key);
+          this.catalog.classes.push(doc);
         }
-        const arr = this.catalog.skillsByClassFuid.get(classFuid);
-        if (!arr.some((s) => (s.system?.fuid || s.name) === (item.system?.fuid || item.name))) {
-          arr.push(item);
+      } else if (doc.type === "spell") {
+        const key = (doc.system?.fuid || doc.name).trim().toLowerCase();
+        if (!seenSpells.has(key)) {
+          seenSpells.add(key);
+          this.catalog.spells.push(doc);
         }
       }
-    }
-
-    const seenFuids = new Set();
-    for (const pack of classPacks) {
-      const docs = await pack.getDocuments();
-      for (const doc of docs) {
-        if (doc.type !== "class") continue;
-        const key = (doc.system?.fuid || doc.name).toLowerCase();
-        if (seenFuids.has(key)) continue;
-        seenFuids.add(key);
-        this.catalog.classes.push(doc);
-      }
-    }
-
-    for (const item of game.items ?? []) {
-      if (item.type !== "class") continue;
-      const key = (item.system?.fuid || item.name).toLowerCase();
-      if (seenFuids.has(key)) continue;
-      seenFuids.add(key);
-      this.catalog.classes.push(item);
     }
 
     this.catalog.classes.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    this.catalog.spells.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
     FULevelUpWizard._cachedCatalog = this.catalog;
   }
 
-  /**
-   * Obtém todas as perícias pertencentes a uma classe.
-   */
   getSkillsForClass(classDoc) {
     const result = [];
     const seen = new Set();
@@ -266,9 +309,6 @@ export class FULevelUpWizard {
     return result;
   }
 
-  /**
-   * Retorna as classes atualmente na ficha + a classe nova recém-selecionada (se houver).
-   */
   getActorClassesData() {
     const ownedClasses = this.actor.items.filter((i) => i.type === "class");
     const ownedSkills = this.actor.items.filter((i) => i.type === "skill");
@@ -297,7 +337,8 @@ export class FULevelUpWizard {
           fuid: poolFuid,
           currentRank,
           maxRank,
-          description: poolSkill.system?.description || ""
+          description: poolSkill.system?.description || "",
+          grantsSpell: doesSkillGrantSpell(poolSkill)
         };
       });
 
@@ -318,7 +359,6 @@ export class FULevelUpWizard {
       };
     });
 
-    // Se o jogador escolheu uma nova classe na modal, coloca ela imediatamente na árvore para escolher o poder
     if (this.stagedNewClass) {
       const stagedFuid = (this.stagedNewClass.system?.fuid || this.stagedNewClass.name).trim().toLowerCase();
       const alreadyOwned = list.some((c) => c.fuid === stagedFuid);
@@ -333,7 +373,8 @@ export class FULevelUpWizard {
           fuid: (poolSkill.system?.fuid || "").trim().toLowerCase(),
           currentRank: 0,
           maxRank: Math.max(1, Number(poolSkill.system?.level?.max ?? 1)),
-          description: poolSkill.system?.description || ""
+          description: poolSkill.system?.description || "",
+          grantsSpell: doesSkillGrantSpell(poolSkill)
         }));
 
         list.push({
@@ -362,11 +403,14 @@ export class FULevelUpWizard {
 
     this._onKeyDown = (ev) => {
       if (ev.key === "Escape") {
-        if (this.classPickerOpen) {
-          this.classPickerOpen = false;
+        if (this.spellPickerContext) {
+          this.spellPickerContext = null;
           this.renderTreeStage();
+        } else if (this.inspectedSkill) {
+          this.closeSkillShowcase();
+        } else if (this.classPickerOpen) {
+          this.closeClassPickerAnimated();
         } else if (this.activeHint) {
-          this.activeHint = null;
           this.removeHintElement();
         } else {
           this.closeWithAnimation(false);
@@ -387,9 +431,6 @@ export class FULevelUpWizard {
     }
   }
 
-  /**
-   * Fecha a janela com animação suave (e opcionalmente um banner de conclusão).
-   */
   async closeWithAnimation(celebrate = false) {
     if (this.isClosing) return;
     this.isClosing = true;
@@ -551,7 +592,7 @@ export class FULevelUpWizard {
             <span class="fu-tree-sep">•</span>
             <span class="fu-tree-classes-count">Classes: <strong>${classesData.length} / ${MAX_CLASSES}</strong></span>
             <span class="fu-tree-sep">•</span>
-            <span class="fu-tree-drag-tip"><i class="fas fa-mouse"></i> Segure <strong>Botão Direito</strong> para arrastar • <strong>Clique Direito</strong> no poder para descrição</span>
+            <span class="fu-tree-drag-tip"><i class="fas fa-mouse"></i> <strong>Clique Esquerdo</strong> para inspecionar e selecionar • <strong>Botão Direito</strong> arrasta a tela</span>
           </div>
 
           <div class="fu-tree-header-right">
@@ -565,9 +606,11 @@ export class FULevelUpWizard {
         </header>
 
         <div class="fu-tree-viewport" id="fu-tree-viewport">
-          <div class="fu-tree-canvas" id="fu-tree-canvas" style="transform: translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom});">
-            <svg class="fu-tree-lines-svg" id="fu-tree-lines-svg" width="2400" height="2400" viewBox="-1200 -1200 2400 2400"></svg>
-            <div class="fu-tree-nodes-layer" id="fu-tree-nodes-layer"></div>
+          <div class="fu-tree-parallax-layer" id="fu-tree-parallax-layer">
+            <div class="fu-tree-canvas" id="fu-tree-canvas" style="transform: translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom});">
+              <svg class="fu-tree-lines-svg" id="fu-tree-lines-svg" width="2400" height="2400" viewBox="-1200 -1200 2400 2400"></svg>
+              <div class="fu-tree-nodes-layer" id="fu-tree-nodes-layer"></div>
+            </div>
           </div>
         </div>
 
@@ -584,40 +627,27 @@ export class FULevelUpWizard {
                 </button>`
               : `<div class="fu-max-classes-note">Limite máximo de 5 classes atingido</div>`
           }
-
-          ${
-            this.pendingSelection
-              ? `<div class="fu-confirm-bar">
-                  <div class="fu-confirm-info">
-                    <span class="fu-confirm-tag">${this.pendingSelection.isNewClass ? "NOVA CLASSE + PODER" : "EVOLUIR PODER"}</span>
-                    <strong>${this.pendingSelection.className}</strong> — <span>${this.pendingSelection.skillName}</span>
-                    <em>(NP ${this.pendingSelection.currentRank} ➔ ${this.pendingSelection.currentRank + 1})</em>
-                  </div>
-                  <div class="fu-confirm-actions">
-                    <button type="button" class="fu-btn-cancel-pick">Cancelar</button>
-                    <button type="button" class="fu-btn-commit-pick">
-                      <i class="fas fa-check"></i> Confirmar Nível
-                    </button>
-                  </div>
-                </div>`
-              : ""
-          }
         </footer>
 
         ${this.classPickerOpen ? this.buildClassPickerHTML(classesData) : ""}
+        ${this.inspectedSkill ? this.buildSkillShowcaseHTML(this.inspectedSkill, info) : ""}
+        ${this.spellPickerContext ? this.buildSpellPickerHTML(this.spellPickerContext) : ""}
       </div>
     `;
 
     this.populateRadialTree(classesData, info);
     this.bindTreeEvents();
+
+    // Consome a flag de animação de spawn após montar a árvore
+    this.animateStagedSpawn = false;
   }
 
   populateRadialTree(classesData, info) {
     const svg = this.root.querySelector("#fu-tree-lines-svg");
     const layer = this.root.querySelector("#fu-tree-nodes-layer");
+    const parallaxLayer = this.root.querySelector("#fu-tree-parallax-layer");
     if (!svg || !layer) return;
 
-    // Anéis orbitais sutis no fundo do SVG para estética constelação
     [135, 310, 420].forEach((radius) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.setAttribute("cx", "0");
@@ -630,7 +660,6 @@ export class FULevelUpWizard {
       svg.appendChild(circle);
     });
 
-    // Núcleo Central com Retrato do Personagem
     const hub = document.createElement("div");
     hub.className = "fu-radial-center-hub";
     hub.innerHTML = `
@@ -641,7 +670,6 @@ export class FULevelUpWizard {
     `;
     layer.appendChild(hub);
 
-    // Estado sem classes: texto limpo, alinhado e sem caixas tortas
     if (classesData.length === 0) {
       const cleanGuide = document.createElement("div");
       cleanGuide.className = "fu-empty-constellation-hint";
@@ -660,15 +688,23 @@ export class FULevelUpWizard {
     classesData.forEach((cls, cIdx) => {
       const baseAngle = startAngle + cIdx * angleStep;
       const palette = cls.palette;
+      const shouldSpawnAnimate = cls.isStaged && this.animateStagedSpawn;
 
       const sectorDist = 135;
       const sx = Math.cos(baseAngle) * sectorDist;
       const sy = Math.sin(baseAngle) * sectorDist;
 
-      this.appendSvgLine(svg, 0, 0, sx, sy, palette.primary, 3, true, cls.isStaged);
+      this.appendSvgLine(svg, 0, 0, sx, sy, palette.primary, 3, true, cls.isStaged, shouldSpawnAnimate ? 0 : null);
 
       const classNode = document.createElement("div");
-      classNode.className = `fu-class-sector-node ${cls.isStaged ? "is-staged-class" : ""}`;
+      classNode.className = [
+        "fu-class-sector-node",
+        cls.isStaged ? "is-staged-class" : "",
+        shouldSpawnAnimate ? "fu-spawn-sector" : ""
+      ]
+        .filter(Boolean)
+        .join(" ");
+
       classNode.style.left = `${sx}px`;
       classNode.style.top = `${sy}px`;
       classNode.style.borderColor = palette.primary;
@@ -696,11 +732,7 @@ export class FULevelUpWizard {
         const isMaxed = skill.currentRank >= skill.maxRank;
         const isClassCapped = cls.investedPoints >= MAX_SKILLS_PER_CLASS;
         const canInvest = info.pending > 0 && !isMaxed && !isClassCapped;
-
-        const isSelected =
-          this.pendingSelection &&
-          this.pendingSelection.classFuid === cls.fuid &&
-          this.pendingSelection.skillName === skill.name;
+        const spawnDelay = 120 + sIdx * 75;
 
         this.appendSvgLine(
           svg,
@@ -708,16 +740,17 @@ export class FULevelUpWizard {
           sy,
           nx,
           ny,
-          isUnlocked || isSelected ? palette.primary : "rgba(148, 163, 184, 0.28)",
-          isUnlocked || isSelected ? 2.5 : 1.5,
-          isUnlocked || isSelected
+          isUnlocked ? palette.primary : "rgba(148, 163, 184, 0.3)",
+          isUnlocked ? 2.5 : 1.5,
+          isUnlocked,
+          false,
+          shouldSpawnAnimate ? spawnDelay : null
         );
 
         let dotsHtml = `<div class="fu-skill-dots">`;
         for (let d = 1; d <= skill.maxRank; d++) {
           const filledDot = d <= skill.currentRank;
-          const previewDot = isSelected && d === skill.currentRank + 1;
-          dotsHtml += `<span class="fu-dot ${filledDot ? "is-filled" : ""} ${previewDot ? "is-preview" : ""}"></span>`;
+          dotsHtml += `<span class="fu-dot ${filledDot ? "is-filled" : ""}"></span>`;
         }
         dotsHtml += `</div>`;
 
@@ -727,14 +760,21 @@ export class FULevelUpWizard {
           isUnlocked ? "is-unlocked" : "is-locked",
           isMaxed ? "is-maxed" : "",
           canInvest ? "is-investable" : "",
-          isSelected ? "is-selected" : ""
+          shouldSpawnAnimate ? "fu-spawn-skill" : ""
         ]
           .filter(Boolean)
           .join(" ");
 
         skillEl.style.left = `${nx}px`;
         skillEl.style.top = `${ny}px`;
-        if (isUnlocked || isSelected) {
+        if (shouldSpawnAnimate) {
+          skillEl.style.setProperty("--start-x", `${sx}px`);
+          skillEl.style.setProperty("--start-y", `${sy}px`);
+          skillEl.style.setProperty("--end-x", `${nx}px`);
+          skillEl.style.setProperty("--end-y", `${ny}px`);
+          skillEl.style.setProperty("--spawn-delay", `${spawnDelay}ms`);
+        }
+        if (isUnlocked) {
           skillEl.style.setProperty("--node-accent", palette.primary);
           skillEl.style.setProperty("--node-glow", palette.glow);
         }
@@ -742,38 +782,38 @@ export class FULevelUpWizard {
         skillEl.innerHTML = `
           <div class="fu-skill-circle">
             <img src="${skill.img}" alt="${skill.name}" />
+            ${skill.grantsSpell ? `<span class="fu-skill-spell-pin" title="Concede Feitiço">✦</span>` : ""}
           </div>
           ${dotsHtml}
           <span class="fu-skill-ratio">${skill.currentRank}/${skill.maxRank}</span>
           <span class="fu-skill-title">${skill.name}</span>
         `;
 
-        skillEl.addEventListener("click", (ev) => {
-          ev.stopPropagation();
-          if (!canInvest) {
-            if (isMaxed) {
-              ui.notifications.warn(`"${skill.name}" já está no nível máximo (${skill.maxRank}/${skill.maxRank}).`);
-            } else if (isClassCapped) {
-              ui.notifications.warn(`A classe ${cls.name} já atingiu o limite de 10 níveis.`);
-            }
-            return;
-          }
-
-          this.pendingSelection = {
-            isNewClass: cls.isStaged,
-            actorClassItem: cls.actorItem,
-            classDoc: cls.compendiumDoc,
-            className: cls.name,
-            classFuid: cls.fuid,
-            skillDoc: skill.poolDoc,
-            actorSkillItem: skill.actorItem,
-            skillName: skill.name,
-            currentRank: skill.currentRank,
-            maxRank: skill.maxRank
-          };
-          this.renderTreeStage();
+        // Efeito "Tela Viva": inclina/puxa suavemente a câmera na direção do nó ao passar o cursor
+        skillEl.addEventListener("mouseenter", () => {
+          if (!parallaxLayer || this.inspectedSkill) return;
+          const dist = Math.hypot(nx, ny) || 1;
+          const pull = 24;
+          const px = -((nx / dist) * pull).toFixed(1);
+          const py = -((ny / dist) * pull).toFixed(1);
+          parallaxLayer.style.setProperty("--parallax-x", `${px}px`);
+          parallaxLayer.style.setProperty("--parallax-y", `${py}px`);
         });
 
+        skillEl.addEventListener("mouseleave", () => {
+          if (!parallaxLayer) return;
+          parallaxLayer.style.setProperty("--parallax-x", "0px");
+          parallaxLayer.style.setProperty("--parallax-y", "0px");
+        });
+
+        // Clique Esquerdo: dá zoom na habilidade e abre o Modal/Painel Grande de Detalhes + Selecionar
+        skillEl.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          if (this.dragMoved) return;
+          this.openSkillShowcase(cls, skill, nx, ny);
+        });
+
+        // Clique Direito: hint rápido flutuante
         skillEl.addEventListener("contextmenu", (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
@@ -798,7 +838,8 @@ export class FULevelUpWizard {
         cls.isMastered ? "#fbbf24" : "rgba(255,255,255,0.12)",
         cls.isMastered ? 3 : 1,
         cls.isMastered,
-        !cls.isMastered
+        !cls.isMastered,
+        shouldSpawnAnimate ? 380 : null
       );
 
       const heroicBtn = document.createElement("button");
@@ -827,7 +868,7 @@ export class FULevelUpWizard {
     });
   }
 
-  appendSvgLine(svg, x1, y1, x2, y2, stroke, width = 2, glowing = false, dashed = false) {
+  appendSvgLine(svg, x1, y1, x2, y2, stroke, width = 2, glowing = false, dashed = false, spawnDelayMs = null) {
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", String(x1));
     line.setAttribute("y1", String(y1));
@@ -841,7 +882,330 @@ export class FULevelUpWizard {
     if (glowing) {
       line.style.filter = `drop-shadow(0 0 6px ${stroke})`;
     }
+    if (spawnDelayMs !== null) {
+      const length = Math.ceil(Math.hypot(x2 - x1, y2 - y1));
+      line.classList.add("fu-spawn-line");
+      line.style.setProperty("--line-len", String(length));
+      line.style.setProperty("--spawn-delay", `${spawnDelayMs}ms`);
+    }
     svg.appendChild(line);
+  }
+
+  /* ==========================================================================
+   * ZOOM NA HABILIDADE + MODAL GRANDE DE INSPEÇÃO E SELEÇÃO
+   * ========================================================================== */
+  openSkillShowcase(cls, skill, nx, ny) {
+    this.removeHintElement();
+    this.savedCamera = { pan: { ...this.pan }, zoom: this.zoom };
+
+    // Aproxima o zoom na habilidade clicada e posiciona ela alinhada à esquerda
+    const targetZoom = 1.65;
+    const offsetLeft = -window.innerWidth * 0.22;
+    this.zoom = targetZoom;
+    this.pan = {
+      x: offsetLeft - nx * targetZoom,
+      y: -ny * targetZoom
+    };
+
+    const canvasEl = this.root.querySelector("#fu-tree-canvas");
+    if (canvasEl) {
+      canvasEl.classList.add("is-zoom-transition");
+      canvasEl.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
+    }
+
+    this.inspectedSkill = { cls, skill };
+    setTimeout(() => {
+      if (this.inspectedSkill) {
+        this.renderTreeStage();
+      }
+    }, 240);
+  }
+
+  closeSkillShowcase() {
+    this.inspectedSkill = null;
+    if (this.savedCamera) {
+      this.pan = { ...this.savedCamera.pan };
+      this.zoom = this.savedCamera.zoom;
+      this.savedCamera = null;
+    }
+    this.renderTreeStage();
+    const canvasEl = this.root.querySelector("#fu-tree-canvas");
+    if (canvasEl) {
+      canvasEl.classList.add("is-zoom-transition");
+      setTimeout(() => canvasEl.classList.remove("is-zoom-transition"), 350);
+    }
+  }
+
+  buildSkillShowcaseHTML({ cls, skill }, info) {
+    const isMaxed = skill.currentRank >= skill.maxRank;
+    const isClassCapped = cls.investedPoints >= MAX_SKILLS_PER_CLASS;
+    const canInvest = info.pending > 0 && !isMaxed && !isClassCapped;
+    const npPct = Math.round((skill.currentRank / skill.maxRank) * 100);
+
+    let ctaLabel = "SELECIONAR";
+    if (skill.grantsSpell && canInvest) {
+      ctaLabel = "SELECIONAR & ESCOLHER FEITIÇO";
+    } else if (isMaxed) {
+      ctaLabel = "NÍVEL MÁXIMO ATINGIDO";
+    } else if (isClassCapped) {
+      ctaLabel = "CLASSE COMPLETA (10/10)";
+    } else if (info.pending <= 0) {
+      ctaLabel = "SEM PONTOS PENDENTES";
+    }
+
+    return `
+      <div class="fu-skill-showcase-backdrop">
+        <div class="fu-skill-showcase-container">
+          <!-- COLUNA ESQUERDA: MOLDURA DOURADA COM ÍCONE DA HABILIDADE E NOME EMBAIXO -->
+          <div class="fu-showcase-left">
+            <div class="fu-showcase-frame">
+              <div class="fu-showcase-geo-ring ring-1"></div>
+              <div class="fu-showcase-geo-ring ring-2"></div>
+              <div class="fu-showcase-dots-diag">• • • • •</div>
+
+              <div class="fu-showcase-icon-pedestal">
+                <img src="${skill.img}" alt="${skill.name}" />
+              </div>
+            </div>
+
+            <div class="fu-showcase-title-banner">
+              <div class="fu-showcase-emblem-circle">
+                <span>✦</span>
+              </div>
+              <h2 class="fu-showcase-skill-name">${skill.name}</h2>
+            </div>
+          </div>
+
+          <!-- COLUNA DIREITA: FUNDO PRETO SEMI-TRANSPARENTE, DESCRIÇÃO E BOTÃO SELECIONAR -->
+          <div class="fu-showcase-right">
+            <div class="fu-showcase-rail">
+              <span class="fu-rail-dot top"></span>
+              <span class="fu-rail-dot mid"></span>
+              <span class="fu-rail-dot bot"></span>
+            </div>
+
+            <div class="fu-showcase-class-header">
+              <div class="fu-showcase-class-badge">
+                <img src="${cls.img}" alt="${cls.name}" />
+              </div>
+              <span class="fu-showcase-class-title">${cls.name}</span>
+            </div>
+
+            <div class="fu-showcase-np-block">
+              <div class="fu-showcase-np-top">
+                <span><i class="fas fa-star"></i> Nível do Poder (NP)</span>
+                <strong>${skill.currentRank} / ${skill.maxRank}</strong>
+              </div>
+              <div class="fu-showcase-np-bar">
+                <div class="fu-showcase-np-fill" style="width: ${npPct}%"></div>
+              </div>
+            </div>
+
+            ${
+              skill.grantsSpell
+                ? `<div class="fu-showcase-spell-notice">
+                    <i class="fas fa-hat-wizard"></i>
+                    <span>Ao selecionar este poder, você escolherá <strong>1 Feitiço</strong> da lista de ${cls.name}.</span>
+                  </div>`
+                : ""
+            }
+
+            <div class="fu-showcase-desc-box">
+              ${formatFUDescription(skill.description)}
+            </div>
+
+            <div class="fu-showcase-actions">
+              <button type="button" class="fu-showcase-back-btn" id="fu-showcase-cancel-btn">
+                <i class="fas fa-arrow-left"></i> VOLTAR
+              </button>
+
+              <button
+                type="button"
+                class="fu-showcase-select-btn"
+                id="fu-showcase-confirm-btn"
+                ${!canInvest ? "disabled" : ""}
+              >
+                <span class="fu-select-corner tl"></span>
+                <span class="fu-select-corner br"></span>
+                <span>${ctaLabel}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (PARA PERÍCIAS QUE CONCEDEM FEITIÇOS)
+   * ========================================================================== */
+  getSpellsForClass(classFuid, showAll = false) {
+    const ownedSpells = this.actor.items.filter((i) => i.type === "spell");
+    const ownedKeys = new Set(
+      ownedSpells.flatMap((s) => [
+        (s.system?.fuid || "").trim().toLowerCase(),
+        s.name.trim().toLowerCase()
+      ]).filter(Boolean)
+    );
+
+    let pool = this.catalog.spells;
+    if (!showAll) {
+      const filtered = pool.filter((sp) => (sp.system?.class?.value || "").trim().toLowerCase() === classFuid);
+      if (filtered.length > 0) {
+        pool = filtered;
+      }
+    }
+
+    return pool.map((sp) => {
+      const fuid = (sp.system?.fuid || "").trim().toLowerCase();
+      const nameKey = sp.name.trim().toLowerCase();
+      const alreadyKnown = (fuid && ownedKeys.has(fuid)) || ownedKeys.has(nameKey);
+
+      return {
+        doc: sp,
+        uuid: sp.uuid,
+        name: sp.name,
+        img: sp.img,
+        alreadyKnown,
+        mpCost: sp.system?.cost?.amount || sp.system?.mpCost?.value || "",
+        target: sp.system?.targeting?.rule || "",
+        duration: sp.system?.duration?.value || "",
+        isOffensive: Boolean(sp.system?.isOffensive?.value || sp.system?.hasRoll?.value),
+        description: sp.system?.description || ""
+      };
+    });
+  }
+
+  buildSpellPickerHTML({ selection, showAllSpells }) {
+    const spells = this.getSpellsForClass(selection.classFuid, showAllSpells);
+
+    const cardsHtml = spells
+      .map(
+        (sp) => `
+        <div class="fu-spell-card ${sp.alreadyKnown ? "is-known" : ""}" data-search="${sp.name.toLowerCase()}">
+          <div class="fu-spell-card-header">
+            <img src="${sp.img}" alt="${sp.name}" />
+            <div class="fu-spell-card-meta">
+              <h4>${sp.name}</h4>
+              <div class="fu-spell-tags">
+                ${sp.isOffensive ? `<span class="fu-spell-tag off">⚡ Ofensivo</span>` : ""}
+                ${sp.mpCost ? `<span class="fu-spell-tag mp">${sp.mpCost} PM</span>` : ""}
+              </div>
+            </div>
+            ${sp.alreadyKnown ? `<span class="fu-spell-known-badge">Já Aprendido</span>` : ""}
+          </div>
+
+          <div class="fu-spell-card-desc">
+            ${formatFUDescription(sp.description)}
+          </div>
+
+          <button
+            type="button"
+            class="fu-choose-spell-btn"
+            data-spell-uuid="${sp.uuid}"
+            ${sp.alreadyKnown ? "disabled" : ""}
+          >
+            ${sp.alreadyKnown ? "Feitiço já aprendido" : "Aprender Feitiço & Confirmar"}
+          </button>
+        </div>
+      `
+      )
+      .join("");
+
+    return `
+      <div class="fu-class-picker-modal" id="fu-spell-picker-modal">
+        <div class="fu-class-picker-box">
+          <div class="fu-picker-header">
+            <div>
+              <h3>Escolher Feitiço — ${selection.className}</h3>
+              <p>Poder selecionado: <strong>${selection.skillName}</strong>. Escolha o feitiço que deseja aprender:</p>
+            </div>
+            <button type="button" class="fu-spell-toggle-all-btn" id="fu-spell-toggle-all">
+              ${showAllSpells ? "Filtrar pela Classe" : "Mostrar Todos os Feitiços"}
+            </button>
+            <input type="search" id="fu-spell-search-input" placeholder="Buscar feitiço..." />
+            <button type="button" class="fu-picker-close-btn" id="fu-spell-picker-close" title="Voltar"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="fu-spell-grid">
+            ${cardsHtml || "<p>Nenhum feitiço encontrado nos compêndios.</p>"}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+   * MODAL ESCOLHER NOVA CLASSE (CARDS MARROM-DOURADOS)
+   * ========================================================================== */
+  buildClassPickerHTML(ownedClassesData) {
+    const ownedFuids = new Set(ownedClassesData.map((c) => c.fuid));
+    const available = this.catalog.classes.filter((c) => {
+      const fuid = (c.system?.fuid || c.name).trim().toLowerCase();
+      return !ownedFuids.has(fuid);
+    });
+
+    const cardsHtml = available
+      .map((cls) => {
+        const fuid = (cls.system?.fuid || cls.name).trim().toLowerCase();
+        const brief = getClassBriefDescription(cls);
+        const benefitTag = getClassShortBenefitTag(cls);
+
+        return `
+          <div class="fu-brown-class-card" data-search="${cls.name.toLowerCase()}">
+            <div class="fu-brown-card-inner">
+              <!-- Emblema em losango dourado no topo com o ícone da classe -->
+              <div class="fu-brown-diamond-crest">
+                <div class="fu-brown-diamond-inner">
+                  <img src="${cls.img}" alt="${cls.name}" />
+                </div>
+              </div>
+
+              <h4 class="fu-brown-class-title">${cls.name}</h4>
+
+              <p class="fu-brown-class-desc">${brief}</p>
+
+              <div class="fu-brown-ornament-chevron">
+                <span>❖</span>
+              </div>
+
+              <div class="fu-brown-benefit-line">${benefitTag}</div>
+
+              <button type="button" class="fu-brown-choose-btn" data-class-fuid="${fuid}">
+                Escolher Classe
+              </button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    return `
+      <div class="fu-class-picker-modal" id="fu-class-picker-modal">
+        <div class="fu-class-picker-box fu-brown-modal-shell">
+          <div class="fu-picker-header">
+            <div>
+              <h3>Escolher Nova Classe (${ownedClassesData.length + 1} de ${MAX_CLASSES})</h3>
+              <p>Escolha uma classe para expandir sua árvore radial de poderes:</p>
+            </div>
+            <input type="search" id="fu-class-search-input" placeholder="Buscar classe..." />
+            <button type="button" class="fu-picker-close-btn" id="fu-class-picker-close" title="Fechar"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="fu-brown-cards-grid" id="fu-picker-grid">
+            ${cardsHtml || "<p>Nenhuma classe adicional encontrada nos compêndios.</p>"}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async closeClassPickerAnimated() {
+    const modal = document.getElementById("fu-class-picker-modal");
+    if (modal) {
+      modal.classList.add("is-closing");
+      await new Promise((r) => setTimeout(r, 260));
+    }
+    this.classPickerOpen = false;
+    this.renderTreeStage();
   }
 
   showSkillHint(skill, cls, clientX, clientY) {
@@ -882,53 +1246,6 @@ export class FULevelUpWizard {
     this.activeHint = null;
   }
 
-  /**
-   * Modal enxuta de Escolha de Nova Classe:
-   * Exibe SOMENTE o card com ícone, nome da classe e o botão "Escolher essa Classe".
-   */
-  buildClassPickerHTML(ownedClassesData) {
-    const ownedFuids = new Set(ownedClassesData.map((c) => c.fuid));
-    const available = this.catalog.classes.filter((c) => {
-      const fuid = (c.system?.fuid || c.name).trim().toLowerCase();
-      return !ownedFuids.has(fuid);
-    });
-
-    const cardsHtml = available
-      .map((cls) => {
-        const fuid = (cls.system?.fuid || cls.name).trim().toLowerCase();
-        return `
-          <div class="fu-picker-simple-card" data-search="${cls.name.toLowerCase()}">
-            <div class="fu-picker-simple-icon">
-              <img src="${cls.img}" alt="${cls.name}" />
-            </div>
-            <h4 class="fu-picker-simple-name">${cls.name}</h4>
-            <button type="button" class="fu-choose-class-card-btn" data-class-fuid="${fuid}">
-              Escolher essa Classe
-            </button>
-          </div>
-        `;
-      })
-      .join("");
-
-    return `
-      <div class="fu-class-picker-modal">
-        <div class="fu-class-picker-box">
-          <div class="fu-picker-header">
-            <div>
-              <h3>Escolher Nova Classe (${ownedClassesData.length + 1} de ${MAX_CLASSES})</h3>
-              <p>Escolha uma classe para adicioná-la à árvore radial e selecionar seu poder:</p>
-            </div>
-            <input type="search" id="fu-class-search-input" placeholder="Buscar classe..." />
-            <button type="button" class="fu-picker-close-btn" title="Fechar"><i class="fas fa-times"></i></button>
-          </div>
-          <div class="fu-picker-simple-grid" id="fu-picker-grid">
-            ${cardsHtml || "<p>Nenhuma classe adicional encontrada nos compêndios.</p>"}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
   bindTreeEvents() {
     const viewport = this.root.querySelector("#fu-tree-viewport");
     const canvasEl = this.root.querySelector("#fu-tree-canvas");
@@ -938,7 +1255,9 @@ export class FULevelUpWizard {
     this.root.querySelector(".fu-tree-reset-cam").onclick = () => {
       this.pan = { x: 0, y: 0 };
       this.zoom = 1;
+      canvasEl.classList.add("is-zoom-transition");
       canvasEl.style.transform = `translate(0px, 0px) scale(1)`;
+      setTimeout(() => canvasEl.classList.remove("is-zoom-transition"), 350);
     };
 
     viewport.addEventListener("contextmenu", (ev) => {
@@ -980,9 +1299,10 @@ export class FULevelUpWizard {
     viewport.addEventListener(
       "wheel",
       (ev) => {
+        if (this.inspectedSkill || this.classPickerOpen || this.spellPickerContext) return;
         ev.preventDefault();
         const delta = ev.deltaY > 0 ? -0.08 : 0.08;
-        this.zoom = Math.min(1.5, Math.max(0.5, Number((this.zoom + delta).toFixed(2))));
+        this.zoom = Math.min(1.6, Math.max(0.5, Number((this.zoom + delta).toFixed(2))));
         canvasEl.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
       },
       { passive: false }
@@ -1000,65 +1320,126 @@ export class FULevelUpWizard {
     if (cancelStagedBtn) {
       cancelStagedBtn.onclick = () => {
         this.stagedNewClass = null;
-        if (this.pendingSelection?.isNewClass) {
-          this.pendingSelection = null;
-        }
         this.classPickerOpen = true;
         this.renderTreeStage();
       };
     }
 
+    // Eventos do Modal de Escolher Nova Classe
     if (this.classPickerOpen) {
-      this.root.querySelector(".fu-picker-close-btn").onclick = () => {
-        this.classPickerOpen = false;
-        this.renderTreeStage();
-      };
+      this.root.querySelector("#fu-class-picker-close")?.addEventListener("click", () => {
+        this.closeClassPickerAnimated();
+      });
 
       const searchInput = this.root.querySelector("#fu-class-search-input");
       searchInput?.addEventListener("input", (ev) => {
         const q = ev.target.value.trim().toLowerCase();
-        this.root.querySelectorAll(".fu-picker-simple-card").forEach((card) => {
-          const match = card.dataset.search.includes(q);
-          card.style.display = match ? "" : "none";
+        this.root.querySelectorAll(".fu-brown-class-card").forEach((card) => {
+          card.style.display = card.dataset.search.includes(q) ? "" : "none";
         });
       });
 
-      this.root.querySelectorAll(".fu-choose-class-card-btn").forEach((btn) => {
-        btn.onclick = () => {
+      this.root.querySelectorAll(".fu-brown-choose-btn").forEach((btn) => {
+        btn.onclick = async () => {
           const classFuid = btn.dataset.classFuid;
           const classDoc = this.catalog.classes.find(
             (c) => (c.system?.fuid || c.name).trim().toLowerCase() === classFuid
           );
           if (!classDoc) return;
 
-          // Coloca imediatamente a classe escolhida na árvore radial para selecionar o poder
+          // Anima o fechamento do modal e dispara a animação das habilidades saindo da classe
+          const modal = document.getElementById("fu-class-picker-modal");
+          if (modal) {
+            modal.classList.add("is-closing");
+            await new Promise((r) => setTimeout(r, 270));
+          }
+
           this.stagedNewClass = classDoc;
-          this.pendingSelection = null;
+          this.animateStagedSpawn = true;
           this.classPickerOpen = false;
           this.renderTreeStage();
         };
       });
     }
 
-    const cancelBtn = this.root.querySelector(".fu-btn-cancel-pick");
-    if (cancelBtn) {
-      cancelBtn.onclick = () => {
-        this.pendingSelection = null;
-        this.renderTreeStage();
-      };
+    // Eventos do Modal Grande de Inspeção de Habilidade (com Zoom)
+    if (this.inspectedSkill) {
+      this.root.querySelector("#fu-showcase-cancel-btn")?.addEventListener("click", () => {
+        this.closeSkillShowcase();
+      });
+
+      const confirmBtn = this.root.querySelector("#fu-showcase-confirm-btn");
+      if (confirmBtn && !confirmBtn.disabled) {
+        confirmBtn.onclick = async () => {
+          const { cls, skill } = this.inspectedSkill;
+          const selection = {
+            isNewClass: cls.isStaged,
+            actorClassItem: cls.actorItem,
+            classDoc: cls.compendiumDoc,
+            className: cls.name,
+            classFuid: cls.fuid,
+            skillDoc: skill.poolDoc,
+            actorSkillItem: skill.actorItem,
+            skillName: skill.name,
+            currentRank: skill.currentRank,
+            maxRank: skill.maxRank,
+            spellDoc: null
+          };
+
+          // Se a perícia concede feitiço (ex.: Magia Elemental), abre o grimório de feitiços
+          if (skill.grantsSpell) {
+            this.inspectedSkill = null;
+            this.spellPickerContext = { selection, showAllSpells: false };
+            this.renderTreeStage();
+            return;
+          }
+
+          confirmBtn.disabled = true;
+          await this.commitAdvancement(selection);
+        };
+      }
     }
 
-    const commitBtn = this.root.querySelector(".fu-btn-commit-pick");
-    if (commitBtn && this.pendingSelection) {
-      commitBtn.onclick = async () => {
-        commitBtn.disabled = true;
-        await this.commitAdvancement(this.pendingSelection);
-      };
+    // Eventos do Modal de Seleção de Feitiços
+    if (this.spellPickerContext) {
+      this.root.querySelector("#fu-spell-picker-close")?.addEventListener("click", () => {
+        this.spellPickerContext = null;
+        this.closeSkillShowcase();
+      });
+
+      this.root.querySelector("#fu-spell-toggle-all")?.addEventListener("click", () => {
+        this.spellPickerContext.showAllSpells = !this.spellPickerContext.showAllSpells;
+        this.renderTreeStage();
+      });
+
+      const spellSearch = this.root.querySelector("#fu-spell-search-input");
+      spellSearch?.addEventListener("input", (ev) => {
+        const q = ev.target.value.trim().toLowerCase();
+        this.root.querySelectorAll(".fu-spell-card").forEach((card) => {
+          card.style.display = card.dataset.search.includes(q) ? "" : "none";
+        });
+      });
+
+      this.root.querySelectorAll(".fu-choose-spell-btn").forEach((btn) => {
+        btn.onclick = async () => {
+          if (btn.disabled) return;
+          btn.disabled = true;
+          const spellUuid = btn.dataset.spellUuid;
+          const spellDoc = this.catalog.spells.find((s) => s.uuid === spellUuid);
+          if (!spellDoc) return;
+
+          const selection = {
+            ...this.spellPickerContext.selection,
+            spellDoc
+          };
+          await this.commitAdvancement(selection);
+        };
+      });
     }
   }
 
   /**
-   * Salva a classe (se nova) e a habilidade na ficha do personagem no formato nativo do projectfu.
+   * Salva a classe (se nova), a habilidade e o feitiço (se houver) na estrutura nativa do projectfu.
    */
   async commitAdvancement(selection) {
     try {
@@ -1090,6 +1471,14 @@ export class FULevelUpWizard {
         newSkillRank = 1;
       }
 
+      let embeddedSpellId = null;
+      if (selection.spellDoc) {
+        const spellData = selection.spellDoc.toObject();
+        delete spellData._id;
+        const [createdSpell] = await this.actor.createEmbeddedDocuments("Item", [spellData]);
+        embeddedSpellId = createdSpell.id;
+      }
+
       const advancements = foundry.utils.deepClone(this.actor.system?.advancements ?? []);
       const newEntry = {
         class: isNewClassEntry
@@ -1100,7 +1489,14 @@ export class FULevelUpWizard {
           value: newSkillRank,
           max: maxSkillRank
         },
-        entries: {}
+        entries: embeddedSpellId
+          ? {
+              spell: {
+                id: embeddedSpellId,
+                locked: false
+              }
+            }
+          : {}
       };
 
       const emptyIndex = advancements.findIndex((adv) => !adv?.skill?.id);
@@ -1112,12 +1508,21 @@ export class FULevelUpWizard {
 
       await this.actor.update({ "system.advancements": advancements });
 
+      const spellSuffix = selection.spellDoc ? ` + Feitiço: ${selection.spellDoc.name}` : "";
       ui.notifications.info(
-        `${this.actor.name}: ${selection.className} — ${selection.skillName} (NP ${newSkillRank}/${maxSkillRank}) aplicado!`
+        `${this.actor.name}: ${selection.className} — ${selection.skillName} (NP ${newSkillRank}/${maxSkillRank})${spellSuffix} aplicado!`
       );
 
-      this.pendingSelection = null;
+      this.inspectedSkill = null;
+      this.spellPickerContext = null;
       this.stagedNewClass = null;
+
+      if (this.savedCamera) {
+        this.pan = { ...this.savedCamera.pan };
+        this.zoom = this.savedCamera.zoom;
+        this.savedCamera = null;
+      }
+
       refreshTopCenterTrigger(this.actor);
 
       const remaining = getPendingLevelInfo(this.actor).pending;
