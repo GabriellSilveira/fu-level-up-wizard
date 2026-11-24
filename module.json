@@ -2,7 +2,7 @@
   "id": "fu-level-up-wizard",
   "title": "Fabula Ultima - Assistente Visual de Level Up (PT-BR)",
   "description": "Tela guiada, animada e interativa em árvore radial para evolução de nível, classes e poderes no sistema Fabula Ultima (projectfu).",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "compatibility": {
     "minimum": "12",
     "verified": "13"
