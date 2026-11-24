@@ -173,11 +173,22 @@
   white-space: nowrap;
 }
 
-/* Tags inline de efeito / elemento */
+/* Ícones oficiais do sistema projectfu dentro dos badges e textos */
+.fu-sys-glyph {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  vertical-align: -3px;
+  flex-shrink: 0;
+}
+
 .fu-inline-tag {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   padding: 1px 7px;
   border-radius: 4px;
   background: rgba(250, 204, 21, 0.14);
@@ -190,7 +201,7 @@
 .fu-inline-effect {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   padding: 1px 8px;
   border-radius: 4px;
   background: rgba(168, 85, 247, 0.2);
@@ -337,7 +348,7 @@
 }
 
 /* ==========================================================================
- * 3. ETAPA 1 (ANIMAÇÃO NOVO NÍVEL)
+ * 3. ETAPA 1 (ANIMAÇÃO NOVO NÍVEL + BOTÃO METÁLICO DOURADO GRAVADO)
  * ========================================================================== */
 .fu-overlay-close-btn {
   position: absolute;
@@ -671,32 +682,86 @@
   animation: fuStatSlideIn 0.55s ease forwards;
 }
 
-.fu-btn-open-tree {
+/* Botão Dourado Metálico Retangular com Laterais Ornamentadas Gravadas */
+.fu-engraved-gold-cta {
+  position: relative;
   width: 100%;
+  height: 60px;
+  padding: 0;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
-  padding: 16px 24px;
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(234, 179, 8, 0.34));
-  border: 1px solid #facc15;
-  border-radius: 10px;
-  color: #ffffff;
-  font-size: 17px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  border: 1.5px solid #e7ca7f;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    #967038 0%,
+    #b9924c 16%,
+    #dfc276 42%,
+    #ebd28a 58%,
+    #c6a057 84%,
+    #977139 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 220, 0.65),
+    inset 0 -2px 5px rgba(58, 38, 12, 0.45),
+    0 10px 28px rgba(0, 0, 0, 0.8),
+    0 0 22px rgba(235, 210, 138, 0.25);
   cursor: pointer;
-  box-shadow: 0 0 28px rgba(250, 204, 21, 0.25);
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
 
-.fu-btn-open-tree:hover {
+.fu-engraved-gold-cta:hover {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.28), rgba(234, 179, 8, 0.48));
-  box-shadow: 0 0 38px rgba(250, 204, 21, 0.45);
+  filter: brightness(1.07);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 250, 230, 0.85),
+    inset 0 -2px 5px rgba(58, 38, 12, 0.45),
+    0 14px 34px rgba(0, 0, 0, 0.88),
+    0 0 32px rgba(245, 222, 155, 0.45);
+}
+
+.fu-engraved-gold-cta:active {
+  transform: translateY(0px) scale(0.992);
+}
+
+.fu-engraved-side {
+  width: 34px;
+  flex-shrink: 0;
+  background-color: rgba(74, 49, 20, 0.34);
+  background-image:
+    radial-gradient(circle at 50% 24%, transparent 6px, rgba(64, 41, 15, 0.42) 7px, rgba(64, 41, 15, 0.42) 9px, transparent 10px),
+    radial-gradient(circle at 50% 50%, rgba(255, 240, 195, 0.22) 0%, rgba(64, 41, 15, 0.45) 60%, transparent 62%),
+    radial-gradient(circle at 50% 76%, transparent 6px, rgba(64, 41, 15, 0.42) 7px, rgba(64, 41, 15, 0.42) 9px, transparent 10px);
+}
+
+.fu-engraved-side.left {
+  border-right: 1px solid rgba(255, 243, 204, 0.55);
+  box-shadow: inset -2px 0 4px rgba(54, 34, 12, 0.38);
+}
+
+.fu-engraved-side.right {
+  border-left: 1px solid rgba(255, 243, 204, 0.55);
+  box-shadow: inset 2px 0 4px rgba(54, 34, 12, 0.38);
+}
+
+.fu-engraved-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  color: #151008;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 245, 210, 0.55);
 }
 
 /* ==========================================================================
- * 4. ETAPA 2: ÁRVORE RADIAL + PARALLAX VIVO + ANIMAÇÃO DE SPAWN
+ * 4. ETAPA 2: ÁRVORE RADIAL (TAMANHO AMPLIADO + RAMIFICAÇÕES + ANIMAÇÃO)
  * ========================================================================== */
 .fu-tree-screen {
   position: relative;
@@ -715,8 +780,8 @@
 .fu-tree-topbar {
   position: relative;
   z-index: 30;
-  height: 58px;
-  padding: 0 22px;
+  height: 60px;
+  padding: 0 24px;
   background: rgba(8, 10, 16, 0.92);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
@@ -731,7 +796,7 @@
   background: transparent;
   border: 1px solid rgba(250, 204, 21, 0.45);
   color: #facc15;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 6px;
   font-weight: 800;
   cursor: pointer;
@@ -741,18 +806,18 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
   color: #cbd5e1;
 }
 
 .fu-tree-actor-name {
   font-weight: 800;
   color: #ffffff;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .fu-tree-drag-tip {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #94a3b8;
 }
 
@@ -769,8 +834,8 @@
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
   color: #e2e8f0;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -778,15 +843,15 @@
 .fu-tree-points-pill {
   background: rgba(250, 204, 21, 0.14);
   border: 1px solid #facc15;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 14px;
   color: #fef08a;
 }
 
 .fu-tree-points-pill strong {
   color: #4ade80;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .fu-tree-viewport {
@@ -818,13 +883,13 @@
 }
 
 .fu-tree-canvas.is-zoom-transition {
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .fu-tree-lines-svg {
   position: absolute;
-  top: -1200px;
-  left: -1200px;
+  top: -1400px;
+  left: -1400px;
   pointer-events: none;
 }
 
@@ -834,12 +899,12 @@
   left: 0;
 }
 
-/* Núcleo Central */
+/* Núcleo Central Ampliado */
 .fu-radial-center-hub {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 112px;
-  height: 112px;
+  width: 140px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -848,9 +913,9 @@
 
 .fu-hub-outer-ring {
   position: absolute;
-  inset: -14px;
+  inset: -16px;
   border-radius: 50%;
-  border: 2px dashed rgba(250, 204, 21, 0.45);
+  border: 2.5px dashed rgba(250, 204, 21, 0.48);
   animation: fuSpinSlow 28s linear infinite;
 }
 
@@ -860,12 +925,12 @@
 }
 
 .fu-hub-portrait-box {
-  width: 96px;
-  height: 96px;
-  border-radius: 14px;
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
   overflow: hidden;
   border: 3px solid #facc15;
-  box-shadow: 0 0 30px rgba(250, 204, 21, 0.45);
+  box-shadow: 0 0 34px rgba(250, 204, 21, 0.45);
   background: #0f172a;
 }
 
@@ -877,17 +942,17 @@
 
 .fu-empty-constellation-hint {
   position: absolute;
-  top: 105px;
+  top: 125px;
   left: 0;
   transform: translateX(-50%);
-  width: 380px;
+  width: 420px;
   text-align: center;
   pointer-events: none;
 }
 
 .fu-empty-constellation-title {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -897,20 +962,20 @@
 
 .fu-empty-constellation-hint p {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #94a3b8;
   line-height: 1.45;
 }
 
-/* Setores das Classes */
+/* Setores das Classes Ampliados */
 .fu-class-sector-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 98px;
-  padding: 8px 6px;
-  border-radius: 12px;
+  width: 126px;
+  padding: 10px 8px;
+  border-radius: 14px;
   background: rgba(12, 15, 24, 0.96);
-  border: 2px solid #facc15;
+  border: 2.5px solid #facc15;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -929,43 +994,43 @@
 
 .fu-staged-badge {
   position: absolute;
-  top: -9px;
+  top: -10px;
   background: #facc15;
   color: #090a0f;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
-  padding: 1px 7px;
+  padding: 2px 9px;
   border-radius: 999px;
   letter-spacing: 0.08em;
 }
 
 .fu-class-sector-node img {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
   object-fit: cover;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .fu-class-sector-name {
-  font-size: 11px;
+  font-size: 13.5px;
   font-weight: 800;
   color: #ffffff;
   line-height: 1.15;
 }
 
 .fu-class-sector-lvl {
-  margin-top: 2px;
-  font-size: 10px;
+  margin-top: 3px;
+  font-size: 12px;
   color: #cbd5e1;
   font-weight: 700;
 }
 
-/* Nós de Habilidades */
+/* Nós de Habilidades Ampliados */
 .fu-skill-node {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 118px;
+  width: 148px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -976,7 +1041,7 @@
 }
 
 .fu-skill-node:hover {
-  transform: translate(-50%, -50%) scale(1.13);
+  transform: translate(-50%, -50%) scale(1.12);
   z-index: 15;
 }
 
@@ -1014,13 +1079,13 @@
 
 .fu-skill-circle {
   position: relative;
-  width: 54px;
-  height: 54px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  padding: 3px;
+  padding: 4px;
   background: #0f172a;
-  border: 2px solid #475569;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  border: 2.5px solid #475569;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.85);
   overflow: visible;
 }
 
@@ -1035,17 +1100,17 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #1e1b4b;
-  border: 1px solid #facc15;
+  border: 1.5px solid #facc15;
   color: #facc15;
-  font-size: 10px;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.7);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.75);
 }
 
 .fu-skill-node.is-locked .fu-skill-circle img {
@@ -1054,61 +1119,229 @@
 
 .fu-skill-node.is-unlocked .fu-skill-circle {
   border-color: var(--node-accent, #22c55e);
-  box-shadow: 0 0 18px var(--node-glow, rgba(34, 197, 94, 0.6));
+  box-shadow: 0 0 22px var(--node-glow, rgba(34, 197, 94, 0.6));
 }
 
 .fu-skill-dots {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  margin-top: 5px;
+  gap: 5px;
+  margin-top: 7px;
 }
 
 .fu-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #4b5563;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .fu-dot.is-filled {
   background: #22c55e;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.85);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
   border-color: #86efac;
 }
 
+/* Animação da bolinha verde preenchendo após escolher a habilidade */
+.fu-dot.is-just-filled {
+  animation: fuDotFillGreenBurst 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fuDotFillGreenBurst {
+  0% {
+    background: #4b5563;
+    transform: scale(0.7);
+    box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+  }
+  45% {
+    background: #86efac;
+    transform: scale(1.85);
+    box-shadow: 0 0 22px #22c55e, 0 0 38px #4ade80;
+  }
+  100% {
+    background: #22c55e;
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+  }
+}
+
+.fu-upgrade-shockwave {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 3px solid #4ade80;
+  pointer-events: none;
+  animation: fuNodeShockwave 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fuNodeShockwave {
+  0% { transform: scale(0.85); opacity: 1; }
+  100% { transform: scale(1.85); opacity: 0; }
+}
+
+.fu-upgrade-float-tag {
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #16a34a;
+  border: 1px solid #86efac;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fuFloatUpTag 0.95s ease-out forwards;
+}
+
+@keyframes fuFloatUpTag {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.8); }
+  25% { opacity: 1; transform: translate(-50%, -4px) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -24px) scale(0.95); }
+}
+
+/* Card fantasma voando da tela de zoom de volta para o nó da habilidade */
+.fu-returning-skill-ghost {
+  position: absolute;
+  left: var(--target-x);
+  top: var(--target-y);
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  border: 2px solid #facc15;
+  box-shadow: 0 0 36px rgba(250, 204, 21, 0.75);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 25;
+  animation: fuSkillReturnToNode 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.fu-returning-skill-ghost img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes fuSkillReturnToNode {
+  0% {
+    opacity: 0.95;
+    transform: translate(calc(-50% - 170px), calc(-50% - 30px)) scale(2.15);
+    border-radius: 16px;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+    border-radius: 50%;
+  }
+}
+
 .fu-skill-ratio {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   color: #94a3b8;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 .fu-skill-title {
-  font-size: 11px;
+  font-size: 13.5px;
   font-weight: 700;
   color: #f1f5f9;
   text-shadow: 0 2px 6px #000000;
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+/* Sub-nós de Feitiços Ramificados da Habilidade */
+.fu-spell-branch-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.18s ease;
+}
+
+.fu-spell-branch-node:hover {
+  transform: translate(-50%, -50%) scale(1.14);
+  z-index: 18;
+}
+
+.fu-spell-branch-node.fu-spawn-spell-branch {
+  left: var(--start-x);
+  top: var(--start-y);
+  opacity: 0;
+  animation: fuSkillEmergeFromClass 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards;
+}
+
+.fu-spell-branch-frame {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  padding: 3px;
+  background: #0d0f17;
+  border: 2px solid #facc15;
+}
+
+.fu-spell-branch-frame img {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.fu-spell-branch-el-pin {
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #090a0f;
+  border: 1.5px solid #facc15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.fu-spell-branch-el-pin .fu-sys-glyph {
+  width: 14px;
+  height: 14px;
+}
+
+.fu-spell-branch-label {
+  margin-top: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  text-shadow: 0 2px 6px #000000;
   line-height: 1.15;
-  margin-top: 1px;
 }
 
 /* Nó Poder Heróico */
 .fu-heroic-node-btn {
   position: absolute;
   transform: translate(-50%, -50%);
-  padding: 8px 14px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
   background: rgba(15, 23, 42, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1.5px solid rgba(148, 163, 184, 0.35);
   color: #94a3b8;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 11px;
+  gap: 3px;
+  font-size: 12.5px;
   font-weight: 800;
   cursor: pointer;
   z-index: 9;
@@ -1133,8 +1366,8 @@
 }
 
 .fu-heroic-claimed-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   border: 1px solid #facc15;
   margin-bottom: 2px;
@@ -1144,7 +1377,7 @@
 .fu-tree-bottombar {
   position: relative;
   z-index: 30;
-  min-height: 74px;
+  min-height: 76px;
   padding: 12px 24px;
   background: rgba(8, 10, 16, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -1159,13 +1392,13 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 46px;
-  padding: 0 28px;
+  height: 48px;
+  padding: 0 30px;
   border-radius: 10px;
   background: linear-gradient(135deg, #1e293b, #0f172a);
   border: 1px solid #38bdf8;
   color: #e0f2fe;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -1191,13 +1424,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 42px;
-  padding: 0 18px;
+  height: 44px;
+  padding: 0 20px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(250, 204, 21, 0.45);
   color: #fde047;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1221,6 +1454,32 @@
 @keyframes fuShowcaseFadeIn {
   from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
+}
+
+.fu-skill-showcase-backdrop.is-confirm-exiting {
+  pointer-events: none;
+  animation: fuShowcaseConfirmExit 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fuShowcaseConfirmExit {
+  0% { opacity: 1; backdrop-filter: blur(4px); }
+  100% { opacity: 0; backdrop-filter: blur(0px); }
+}
+
+.fu-skill-showcase-backdrop.is-confirm-exiting .fu-showcase-right {
+  animation: fuPanelSlideOutRight 0.26s ease forwards;
+}
+
+.fu-skill-showcase-backdrop.is-confirm-exiting .fu-showcase-left {
+  animation: fuPedestalShrinkToTree 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fuPanelSlideOutRight {
+  to { opacity: 0; transform: translateX(48px); }
+}
+
+@keyframes fuPedestalShrinkToTree {
+  to { opacity: 0; transform: scale(0.45) translate(-60px, -20px); }
 }
 
 .fu-skill-showcase-container {
@@ -1728,7 +1987,7 @@
 }
 
 /* ==========================================================================
- * 7. MODAL DE FEITIÇOS — BANNERS VERTICAIS ESTILO REPUTATION / VOYAGES
+ * 7. MODAL DE FEITIÇOS — BANNERS CENTRALIZADOS NA ÚLTIMA FILEIRA
  * ========================================================================== */
 .fu-spell-toggle-all-btn {
   height: 36px;
@@ -1747,18 +2006,24 @@
   background: radial-gradient(circle at 50% 25%, #161d1c, #0a0d0d 75%);
 }
 
+/* Flex centralizado para que 1 ou 2 cards na última fileira fiquem alinhados ao centro */
 .fu-banner-cards-grid {
   flex: 1;
   overflow-y: auto;
   padding: 24px 26px 28px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(305px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  align-content: flex-start;
   gap: 22px;
-  align-content: start;
 }
 
 .fu-banner-spell-card {
   position: relative;
+  flex: 0 1 340px;
+  width: 340px;
+  max-width: 100%;
   background: linear-gradient(180deg, #1b1815 0%, #110f0d 55%, #0c0a09 100%);
   border: 2px solid rgba(214, 203, 184, 0.45);
   padding: 6px;
@@ -1776,7 +2041,6 @@
   opacity: 0.58;
 }
 
-/* Fitas douradas nos cantos superiores */
 .fu-banner-ribbon {
   position: absolute;
   top: -2px;
@@ -1821,7 +2085,6 @@
   color: #a89f91;
 }
 
-/* Medalhão central do feitiço */
 .fu-banner-medallion {
   position: relative;
   width: 82px;
@@ -1846,16 +2109,20 @@
   position: absolute;
   bottom: -8px;
   right: -8px;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #0d0b09;
   border: 2px solid #facc15;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.9);
+}
+
+.fu-medallion-element-badge .fu-sys-glyph {
+  width: 18px;
+  height: 18px;
 }
 
 .fu-banner-rank-title {
@@ -1869,11 +2136,11 @@
 .fu-el-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 10px;
+  gap: 5px;
+  padding: 3px 11px;
   border-radius: 999px;
   border: 1px solid;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 800;
   letter-spacing: 0.04em;
 }
@@ -1891,7 +2158,6 @@
   margin-bottom: 10px;
 }
 
-/* Barras de atributos estilo dourado */
 .fu-banner-stats-rows {
   width: 100%;
   display: flex;
@@ -1960,7 +2226,7 @@
 }
 
 /* ==========================================================================
- * 8. MODAL DE PODERES HERÓICOS (EXCLUSIVOS DA CLASSE OU GENÉRICOS)
+ * 8. MODAL DE PODERES HERÓICOS
  * ========================================================================== */
 .fu-heroic-tabs-bar {
   display: flex;
@@ -1998,13 +2264,18 @@
   flex: 1;
   overflow-y: auto;
   padding: 20px 22px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  align-content: flex-start;
   gap: 16px;
-  align-content: start;
 }
 
 .fu-heroic-card {
+  flex: 0 1 345px;
+  width: 345px;
+  max-width: 100%;
   background: linear-gradient(180deg, #211912, #120e0a);
   border: 1px solid rgba(250, 204, 21, 0.45);
   border-radius: 10px;
@@ -2088,17 +2359,17 @@
 }
 
 .fu-empty-heroic-msg {
-  grid-column: 1 / -1;
+  width: 100%;
   text-align: center;
   color: #94a3b8;
   padding: 40px 20px;
 }
 
-/* Hint Flutuante (Botão Direito na Habilidade) */
+/* Hint Flutuante (Botão Direito na Habilidade ou Clique no Feitiço Ramificado) */
 #fu-skill-hint-popover {
   position: fixed;
   z-index: 10050;
-  width: 360px;
+  width: 370px;
   max-width: 90vw;
   background: rgba(10, 12, 18, 0.98);
   border: 1px solid #facc15;
@@ -2154,6 +2425,13 @@
   font-size: 14px;
 }
 
+.fu-hint-elements-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .fu-hint-body {
   margin-top: 10px;
   font-size: 13px;
@@ -2161,4 +2439,4 @@
   color: #cbd5e1;
   max-height: 240px;
   overflow-y: auto;
-}v
+}
