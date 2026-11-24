@@ -1,0 +1,1131 @@
+/* ==========================================================================
+ * 1. GATILHO NO CENTRO SUPERIOR DA TELA & BANNER NA FICHA
+ * ========================================================================== */
+#fu-levelup-hud-trigger {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  pointer-events: auto;
+}
+
+.fu-hud-levelup-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 18px 7px 8px;
+  background: linear-gradient(135deg, rgba(12, 14, 22, 0.96), rgba(26, 30, 46, 0.96));
+  border: 1px solid rgba(250, 204, 21, 0.75);
+  border-radius: 999px;
+  color: #f8fafc;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(250, 204, 21, 0.35), 0 8px 20px rgba(0, 0, 0, 0.65);
+  animation: fuHudPulse 2.4s infinite ease-in-out;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fu-hud-levelup-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 32px rgba(250, 204, 21, 0.65), 0 10px 24px rgba(0, 0, 0, 0.8);
+}
+
+.fu-hud-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #facc15;
+}
+
+.fu-hud-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.fu-hud-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #facc15;
+}
+
+.fu-hud-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.fu-hud-badge {
+  background: #facc15;
+  color: #090a0f;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+@keyframes fuHudPulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(250, 204, 21, 0.32), 0 8px 20px rgba(0, 0, 0, 0.65); }
+  50% { box-shadow: 0 0 32px rgba(250, 204, 21, 0.65), 0 8px 22px rgba(0, 0, 0, 0.75); }
+}
+
+/* Botões dentro da Ficha */
+.fu-sheet-header-pill {
+  background: linear-gradient(90deg, #ca8a04, #facc15);
+  color: #0a0a0a;
+  border: none;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.fu-sheet-levelup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 10px 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #0b0d14, #171b29);
+  border: 1px solid #eab308;
+  border-radius: 10px;
+  color: #f8fafc;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.fu-sheet-banner-tag {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #facc15;
+  font-weight: 700;
+}
+
+.fu-sheet-banner-btn {
+  background: linear-gradient(135deg, #facc15, #eab308);
+  color: #090a0f;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+ * 2. OVERLAY FULLSCREEN & ETAPA 1 (ANIMAÇÃO NOVO NÍVEL)
+ * ========================================================================== */
+#fu-levelup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #050608;
+  color: #f8fafc;
+  font-family: "Signika", "Segoe UI", sans-serif;
+  overflow: hidden;
+  animation: fuOverlayFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fuOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fu-overlay-close-btn {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #e2e8f0;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.fu-overlay-close-btn:hover {
+  background: rgba(239, 68, 68, 0.35);
+  border-color: #ef4444;
+}
+
+.fu-reveal-backdrop {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 26% 48%, rgba(180, 65, 35, 0.22), rgba(5, 6, 8, 0.98) 58%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fu-reveal-layout {
+  width: min(1280px, 94vw);
+  height: min(760px, 90vh);
+  display: grid;
+  grid-template-columns: 44% 56%;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Esquerda: Retrato do Personagem */
+.fu-reveal-left {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: fuSlidePortrait 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fuSlidePortrait {
+  from { opacity: 0; transform: translateX(-45px) scale(0.96); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.fu-reveal-portrait-wrap {
+  width: 340px;
+  height: 440px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(234, 179, 8, 0.16);
+  background: #0c0e14;
+}
+
+.fu-reveal-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.fu-reveal-quote-box {
+  margin-top: 22px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.fu-reveal-quote-text {
+  font-size: 14px;
+  color: #cbd5e1;
+  margin: 0 0 10px;
+}
+
+.fu-reveal-quote-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fu-tag-box {
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.fu-tag-actor {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Direita: Novo Nível & Ganhos */
+.fu-reveal-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 24px;
+}
+
+.fu-reveal-header-emblem {
+  position: relative;
+  text-align: center;
+  margin-bottom: 24px;
+  animation: fuFadeDown 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fuFadeDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fu-triangle-emblem {
+  width: 64px;
+  height: 54px;
+  margin: 0 auto -18px;
+  border-left: 32px solid transparent;
+  border-right: 32px solid transparent;
+  border-bottom: 54px solid rgba(250, 204, 21, 0.25);
+  filter: drop-shadow(0 0 14px rgba(250, 204, 21, 0.6));
+}
+
+.fu-reveal-main-title {
+  margin: 0;
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #ffffff;
+  text-shadow: 0 4px 26px rgba(255, 255, 255, 0.35);
+}
+
+.fu-reveal-sub-title {
+  font-size: 12px;
+  letter-spacing: 0.45em;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.fu-reveal-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.fu-div-wing {
+  width: 90px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #facc15);
+}
+
+.fu-div-wing.right {
+  background: linear-gradient(90deg, #facc15, transparent);
+}
+
+.fu-div-dots {
+  color: #facc15;
+  font-size: 11px;
+}
+
+.fu-reveal-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  margin-bottom: 18px;
+}
+
+.fu-rank-fraction {
+  display: flex;
+  align-items: baseline;
+  color: #e2e8f0;
+}
+
+.fu-rank-small {
+  font-size: 11px;
+  color: #facc15;
+  margin-right: 4px;
+  font-weight: 800;
+}
+
+.fu-rank-big {
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.fu-rank-slash {
+  font-size: 16px;
+  color: #64748b;
+}
+
+.fu-rank-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+  flex: 1;
+}
+
+.fu-rank-diamond {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(250, 204, 21, 0.55);
+  transform: rotate(45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #facc15;
+}
+
+.fu-rank-diamond span {
+  transform: rotate(-45deg);
+  font-size: 13px;
+}
+
+/* Linhas de Vida e Mana */
+.fu-reveal-stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.fu-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #facc15;
+  border-radius: 4px;
+  opacity: 0;
+  animation: fuStatSlideIn 0.55s ease forwards;
+}
+
+.fu-anim-delay-1 { animation-delay: 0.25s; }
+.fu-anim-delay-2 { animation-delay: 0.42s; }
+.fu-anim-delay-3 { animation-delay: 0.58s; }
+.fu-anim-delay-4 { animation-delay: 0.72s; }
+
+@keyframes fuStatSlideIn {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.fu-stat-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.fu-stat-values {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  color: #cbd5e1;
+}
+
+.fu-stat-new {
+  color: #4ade80;
+  font-size: 20px;
+}
+
+.fu-stat-values small {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.fu-stat-star {
+  color: #facc15;
+  font-size: 18px;
+}
+
+/* Barra de Progresso */
+.fu-reveal-progress-wrap {
+  margin-bottom: 26px;
+  opacity: 0;
+  animation: fuStatSlideIn 0.55s ease forwards;
+}
+
+.fu-progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.fu-lv-label strong {
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.fu-lv-pending {
+  color: #facc15;
+  font-weight: 800;
+}
+
+.fu-progress-track {
+  width: 100%;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fu-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444, #facc15);
+  transition: width 0.5s ease;
+}
+
+/* Botão Escolher Classe e Habilidades */
+.fu-reveal-actions {
+  opacity: 0;
+  animation: fuStatSlideIn 0.55s ease forwards;
+}
+
+.fu-btn-open-tree {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.16), rgba(234, 179, 8, 0.34));
+  border: 1px solid #facc15;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.25);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fu-btn-open-tree:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.28), rgba(234, 179, 8, 0.48));
+  box-shadow: 0 0 38px rgba(250, 204, 21, 0.45);
+}
+
+/* ==========================================================================
+ * 3. ETAPA 2: ÁRVORE RADIAL DE CLASSES E HABILIDADES (FUNDO PRETO)
+ * ========================================================================== */
+.fu-tree-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #050609;
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.24) 0%, rgba(5, 6, 9, 0.98) 72%),
+    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 100% 100%, 34px 34px;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.fu-tree-topbar {
+  position: relative;
+  z-index: 30;
+  height: 58px;
+  padding: 0 22px;
+  background: rgba(8, 10, 16, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fu-tree-back-btn {
+  background: transparent;
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  color: #facc15;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fu-tree-header-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+
+.fu-tree-actor-name {
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.fu-tree-drag-tip {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.fu-tree-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fu-tree-reset-cam {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fu-tree-points-pill {
+  background: rgba(250, 204, 21, 0.14);
+  border: 1px solid #facc15;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #fef08a;
+}
+
+.fu-tree-points-pill strong {
+  color: #4ade80;
+  font-size: 15px;
+}
+
+/* Viewport & Canvas Panorâmico */
+.fu-tree-viewport {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  cursor: default;
+}
+
+.fu-tree-viewport.is-grabbing {
+  cursor: grabbing;
+}
+
+.fu-tree-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+}
+
+.fu-tree-lines-svg {
+  position: absolute;
+  top: -1200px;
+  left: -1200px;
+  pointer-events: none;
+}
+
+.fu-tree-nodes-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Núcleo Central (Retrato do Personagem) */
+.fu-radial-center-hub {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.fu-hub-outer-ring {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 2px dashed rgba(250, 204, 21, 0.45);
+  animation: fuSpinSlow 28s linear infinite;
+}
+
+@keyframes fuSpinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.fu-hub-portrait-box {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 3px solid #facc15;
+  box-shadow: 0 0 30px rgba(250, 204, 21, 0.45);
+  background: #0f172a;
+}
+
+.fu-hub-portrait-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Setores das Classes */
+.fu-class-sector-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 94px;
+  padding: 7px 6px;
+  border-radius: 12px;
+  background: rgba(12, 15, 24, 0.94);
+  border: 2px solid #facc15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 8;
+}
+
+.fu-class-sector-node img {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-bottom: 4px;
+}
+
+.fu-class-sector-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.fu-class-sector-lvl {
+  margin-top: 2px;
+  font-size: 10px;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+/* Nós de Habilidades + Bolinhas Cinzas / Verdes */
+.fu-skill-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  z-index: 9;
+  transition: transform 0.16s ease;
+}
+
+.fu-skill-node:hover {
+  transform: translate(-50%, -50%) scale(1.09);
+  z-index: 15;
+}
+
+.fu-skill-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  padding: 3px;
+  background: #0f172a;
+  border: 2px solid #475569;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.fu-skill-circle img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.fu-skill-node.is-locked .fu-skill-circle img {
+  filter: grayscale(0.65) brightness(0.8);
+}
+
+.fu-skill-node.is-unlocked .fu-skill-circle,
+.fu-skill-node.is-selected .fu-skill-circle {
+  border-color: var(--node-accent, #22c55e);
+  box-shadow: 0 0 18px var(--node-glow, rgba(34, 197, 94, 0.6));
+}
+
+.fu-skill-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.fu-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4b5563; /* Cinza para pontos não adquiridos */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.fu-dot.is-filled {
+  background: #22c55e; /* Verde ao adquirir ponto */
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.85);
+  border-color: #86efac;
+}
+
+.fu-dot.is-preview {
+  background: #facc15;
+  box-shadow: 0 0 8px #facc15;
+}
+
+.fu-skill-ratio {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.fu-skill-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-shadow: 0 2px 6px #000000;
+  line-height: 1.15;
+  margin-top: 1px;
+}
+
+/* Botão Poder Heróico no Final da Árvore (10 skills) */
+.fu-heroic-node-btn {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 9;
+}
+
+.fu-heroic-node-btn.is-ready {
+  border-color: #fbbf24;
+  color: #fef08a;
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.95), rgba(180, 83, 9, 0.95));
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.65);
+}
+
+/* Rodapé: Botão Escolher Nova Classe & Barra de Confirmação */
+.fu-tree-bottombar {
+  position: relative;
+  z-index: 30;
+  min-height: 68px;
+  padding: 10px 24px;
+  background: rgba(8, 10, 16, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.fu-new-class-btn {
+  padding: 12px 26px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid #38bdf8;
+  color: #e0f2fe;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fu-new-class-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 26px rgba(56, 189, 248, 0.5);
+}
+
+.fu-new-class-btn.fu-pulse-cta {
+  border-color: #facc15;
+  color: #fef08a;
+  box-shadow: 0 0 26px rgba(250, 204, 21, 0.45);
+}
+
+.fu-confirm-bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 8px 16px;
+  background: rgba(20, 83, 45, 0.35);
+  border: 1px solid #22c55e;
+  border-radius: 10px;
+}
+
+.fu-confirm-tag {
+  display: block;
+  font-size: 10px;
+  color: #4ade80;
+  font-weight: 800;
+}
+
+.fu-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.fu-btn-cancel-pick {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fu-btn-commit-pick {
+  background: #22c55e;
+  border: none;
+  color: #052e16;
+  font-weight: 800;
+  padding: 7px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Hint Flutuante (Botão Direito na Habilidade) */
+#fu-skill-hint-popover {
+  position: fixed;
+  z-index: 10050;
+  width: 360px;
+  max-width: 90vw;
+  background: rgba(10, 12, 18, 0.98);
+  border: 1px solid #facc15;
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.9);
+  padding: 14px;
+  color: #f1f5f9;
+}
+
+.fu-hint-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fu-hint-header img {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+}
+
+.fu-hint-class {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #facc15;
+  font-weight: 800;
+}
+
+.fu-hint-header h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #ffffff;
+}
+
+.fu-hint-np {
+  margin-left: auto;
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid #22c55e;
+  color: #4ade80;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.fu-hint-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.fu-hint-body {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* Modal Escolher Nova Classe */
+.fu-class-picker-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  background: rgba(3, 4, 7, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.fu-class-picker-box {
+  width: min(1120px, 94vw);
+  height: min(760px, 88vh);
+  background: #0b0d14;
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fu-picker-header {
+  padding: 16px 22px;
+  background: #111522;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.fu-picker-header h3 {
+  margin: 0;
+  color: #facc15;
+}
+
+.fu-picker-header p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+#fu-class-search-input {
+  margin-left: auto;
+  width: 240px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #07090e;
+  color: #ffffff;
+}
+
+.fu-picker-close-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fu-picker-grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 14px;
+}
+
+.fu-picker-card {
+  background: #121624;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fu-picker-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fu-picker-card-top img {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+}
+
+.fu-picker-card-top h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.fu-picker-source {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.fu-picker-benefits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: #fde047;
+}
+
+.fu-picker-skill-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.fu-picker-skill-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fu-picker-skill-btn:hover {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.16);
+}
+
+.fu-picker-skill-btn img {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+}
+
+.fu-empty-tree-prompt {
+  position: absolute;
+  top: 125px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: 300px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.fu-empty-pick-class-btn {
+  margin-top: 10px;
+  background: #facc15;
+  color: #090a0f;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
