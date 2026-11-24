@@ -19,33 +19,83 @@ const SPELL_GRANTING_FUIDS = new Set([
   "magisphere"
 ]);
 
+/**
+ * Ícones SVG nítidos e sempre visíveis para tags, elementos, status e atributos
+ */
+const SVG_GLYPHS = {
+  offensive: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>`,
+  spell: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 5.8L20 10l-5.8 2.2L12 18l-2.2-5.8L4 10l5.8-2.2L12 2zm7 12l1.1 2.9L23 18l-2.9 1.1L19 22l-1.1-2.9L15 18l2.9-1.1L19 14z"/></svg>`,
+  melee: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.7 3.3a1 1 0 0 0-1.4 0l-9.6 9.6-2.3-2.3-1.4 1.4 2.3 2.3-4.3 4.3V21h2.4l4.3-4.3 2.3 2.3 1.4-1.4-2.3-2.3 9.6-9.6a1 1 0 0 0 0-1.4z"/></svg>`,
+  ranged: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm0-13a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0 7a2 2 0 1 1 2-2 2 2 0 0 1-2 2z"/></svg>`,
+  martial: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3 7h7l-5.5 4.2L18.5 21 12 16.8 5.5 21l2-7.8L2 9h7l3-7z"/></svg>`,
+  hp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+  mp: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69z"/></svg>`,
+  def: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z"/></svg>`,
+  mdef: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 4.5l1.6 3.4 3.7.5-2.7 2.6.6 3.7L12 15l-3.2 1.7.6-3.7-2.7-2.6 3.7-.5L12 6.5z"/></svg>`,
+  guard: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 15l-4-4 1.41-1.41L11 13.17l5.59-5.59L18 9l-7 7z"/></svg>`,
+  weaponEnchant: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3l-6 6 2 2 6-6-2-2zm-8.5 7.5L3 18v3h3l7.5-7.5-3-3zM6 6l1-2 2-1-2-1-1-2-1 2-2 1 2 1 1 2z"/></svg>`,
+  stagger: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`,
+  header: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 6.5c-2.5 0-4.7 1.1-6.2 2.9L12 7 9.2 9.4C7.7 7.6 5.5 6.5 3 6.5c0 3.3 2.1 6.1 5 7.1V17h8v-3.4c2.9-1 5-3.8 5-7.1z"/></svg>`,
+  fire: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/></svg>`,
+  ice: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 11h-4.17l3.24-3.24-1.41-1.42L15 11h-2V9l4.66-4.66-1.42-1.41L13 6.17V2h-2v4.17L7.76 2.93 6.34 4.34 11 9v2H9L4.34 6.34 2.93 7.76 6.17 11H2v2h4.17l-3.24 3.24 1.41 1.42L9 13h2v2l-4.66 4.66 1.42 1.41L11 17.83V22h2v-4.17l3.24 3.24 1.42-1.41L13 15v-2h2l4.66 4.66 1.41-1.42L17.83 13H22v-2z"/></svg>`,
+  bolt: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>`,
+  earth: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 6l-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22L14 6z"/></svg>`,
+  air: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 17c0 1.65-1.35 3-3 3s-3-1.35-3-3h2c0 .55.45 1 1 1s1-.45 1-1-.45-1-1-1H2v-2h9.5c1.65 0 3 1.35 3 3zM19 6.5C19 4.57 17.43 3 15.5 3S12 4.57 12 6.5h2c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5S16.33 8 15.5 8H2v2h13.5c1.93 0 3.5-1.57 3.5-3.5zm-.5 4.5H2v2h16.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5v2c1.93 0 3.5-1.57 3.5-3.5S20.43 11 18.5 11z"/></svg>`,
+  light: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7a5 5 0 1 0 5 5 5 5 0 0 0-5-5zm0-5v3m0 14v3M4.22 4.22l2.12 2.12m11.32 11.32l2.12 2.12M2 12h3m14 0h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  dark: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>`,
+  poison: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.58 2 4 5.58 4 10c0 2.76 1.4 5.19 3.53 6.62V20a1 1 0 0 0 1 1h6.94a1 1 0 0 0 1-1v-3.38C18.6 15.19 20 12.76 20 10c0-4.42-3.58-8-8-8zm-2.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>`,
+  physical: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 3L21 9.5l-1.4 1.4-2.1-2.1-9.9 9.9 2.1 2.1L8.3 22 1.8 15.5l1.4-1.4 2.1 2.1 9.9-9.9-2.1-2.1L14.5 3z"/></svg>`,
+  dazed: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>`,
+  shaken: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>`,
+  slow: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 11H8v-2h3V6h2z"/></svg>`,
+  weak: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 18l2.29-2.29-4.88-4.88-4 4L2 7.41 3.41 6l6 6 4-4 6.3 6.29L22 12v6h-6z"/></svg>`,
+  enraged: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-4 8l3 1.5-3 1.5V10zm8 3l-3-1.5L16 10v3zm-4 5c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/></svg>`,
+  poisoned: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.58 2 4 5.58 4 10c0 2.76 1.4 5.19 3.53 6.62V20a1 1 0 0 0 1 1h6.94a1 1 0 0 0 1-1v-3.38C18.6 15.19 20 12.76 20 10c0-4.42-3.58-8-8-8zm-2.5 11a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>`
+};
+
+function renderTagIcon(iconKey) {
+  const cleanKey = String(iconKey || "")
+    .replace(/^fu-/, "")
+    .trim();
+  const svg = SVG_GLYPHS[cleanKey] || SVG_GLYPHS.spell;
+  return `<span class="fu-svg-glyph" aria-hidden="true">${svg}</span>`;
+}
+
+function normalizeTextKey(str = "") {
+  return String(str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 const ELEMENT_META = {
-  fire: { label: "Fogo", iconClass: "fu-fire", color: "#fb923c", bg: "rgba(249, 115, 22, 0.22)", border: "rgba(249, 115, 22, 0.6)" },
-  ice: { label: "Gelo", iconClass: "fu-ice", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.22)", border: "rgba(56, 189, 248, 0.6)" },
-  bolt: { label: "Raio", iconClass: "fu-bolt", color: "#facc15", bg: "rgba(250, 204, 21, 0.22)", border: "rgba(250, 204, 21, 0.6)" },
-  earth: { label: "Terra", iconClass: "fu-earth", color: "#d97706", bg: "rgba(217, 119, 6, 0.22)", border: "rgba(217, 119, 6, 0.6)" },
-  air: { label: "Ar", iconClass: "fu-air", color: "#34d399", bg: "rgba(52, 211, 153, 0.22)", border: "rgba(52, 211, 153, 0.55)" },
-  light: { label: "Luz", iconClass: "fu-light", color: "#fef08a", bg: "rgba(254, 240, 138, 0.22)", border: "rgba(254, 240, 138, 0.6)" },
-  dark: { label: "Trevas", iconClass: "fu-dark", color: "#c084fc", bg: "rgba(192, 132, 252, 0.22)", border: "rgba(192, 132, 252, 0.6)" },
-  poison: { label: "Veneno", iconClass: "fu-poison", color: "#e879f9", bg: "rgba(217, 70, 239, 0.22)", border: "rgba(217, 70, 239, 0.6)" },
-  physical: { label: "Físico", iconClass: "fu-physical", color: "#cbd5e1", bg: "rgba(148, 163, 184, 0.22)", border: "rgba(148, 163, 184, 0.55)" }
+  fire: { label: "Fogo", iconKey: "fire", color: "#fb923c", bg: "rgba(249, 115, 22, 0.22)", border: "rgba(249, 115, 22, 0.6)" },
+  ice: { label: "Gelo", iconKey: "ice", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.22)", border: "rgba(56, 189, 248, 0.6)" },
+  bolt: { label: "Raio", iconKey: "bolt", color: "#facc15", bg: "rgba(250, 204, 21, 0.22)", border: "rgba(250, 204, 21, 0.6)" },
+  earth: { label: "Terra", iconKey: "earth", color: "#d97706", bg: "rgba(217, 119, 6, 0.22)", border: "rgba(217, 119, 6, 0.6)" },
+  air: { label: "Ar", iconKey: "air", color: "#34d399", bg: "rgba(52, 211, 153, 0.22)", border: "rgba(52, 211, 153, 0.55)" },
+  light: { label: "Luz", iconKey: "light", color: "#fef08a", bg: "rgba(254, 240, 138, 0.22)", border: "rgba(254, 240, 138, 0.6)" },
+  dark: { label: "Trevas", iconKey: "dark", color: "#c084fc", bg: "rgba(192, 132, 252, 0.22)", border: "rgba(192, 132, 252, 0.6)" },
+  poison: { label: "Veneno", iconKey: "poison", color: "#e879f9", bg: "rgba(217, 70, 239, 0.22)", border: "rgba(217, 70, 239, 0.6)" },
+  physical: { label: "Físico", iconKey: "physical", color: "#cbd5e1", bg: "rgba(148, 163, 184, 0.22)", border: "rgba(148, 163, 184, 0.55)" }
 };
 
 const EFFECT_LABELS = {
-  slow: { label: "Lento", iconClass: "fu-slow", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.2)", border: "rgba(56, 189, 248, 0.55)" },
-  dazed: { label: "Atordoado", iconClass: "fu-dazed", color: "#facc15", bg: "rgba(250, 204, 21, 0.2)", border: "rgba(250, 204, 21, 0.55)" },
-  weak: { label: "Fraco", iconClass: "fu-weak", color: "#fb923c", bg: "rgba(251, 146, 60, 0.2)", border: "rgba(251, 146, 60, 0.55)" },
-  shaken: { label: "Abalado", iconClass: "fu-shaken", color: "#c084fc", bg: "rgba(192, 132, 252, 0.2)", border: "rgba(192, 132, 252, 0.55)" },
-  enraged: { label: "Enfurecido", iconClass: "fu-enraged", color: "#f87171", bg: "rgba(248, 113, 113, 0.2)", border: "rgba(248, 113, 113, 0.55)" },
-  poisoned: { label: "Envenenado", iconClass: "fu-poisoned", color: "#e879f9", bg: "rgba(232, 121, 249, 0.2)", border: "rgba(232, 121, 249, 0.55)" },
-  guard: { label: "Protegido", iconClass: "fu-guard", color: "#60a5fa", bg: "rgba(96, 165, 250, 0.2)", border: "rgba(96, 165, 250, 0.55)" }
+  slow: { label: "Lento", iconKey: "slow", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.2)", border: "rgba(56, 189, 248, 0.55)" },
+  dazed: { label: "Atordoado", iconKey: "dazed", color: "#facc15", bg: "rgba(250, 204, 21, 0.2)", border: "rgba(250, 204, 21, 0.55)" },
+  weak: { label: "Fraco", iconKey: "weak", color: "#fb923c", bg: "rgba(251, 146, 60, 0.2)", border: "rgba(251, 146, 60, 0.55)" },
+  shaken: { label: "Abalado", iconKey: "shaken", color: "#c084fc", bg: "rgba(192, 132, 252, 0.2)", border: "rgba(192, 132, 252, 0.55)" },
+  enraged: { label: "Enfurecido", iconKey: "enraged", color: "#f87171", bg: "rgba(248, 113, 113, 0.2)", border: "rgba(248, 113, 113, 0.55)" },
+  poisoned: { label: "Envenenado", iconKey: "poisoned", color: "#e879f9", bg: "rgba(232, 121, 249, 0.2)", border: "rgba(232, 121, 249, 0.55)" },
+  guard: { label: "Protegido", iconKey: "guard", color: "#60a5fa", bg: "rgba(96, 165, 250, 0.2)", border: "rgba(96, 165, 250, 0.55)" }
 };
 
 const SUPPORT_KEYWORD_RULES = [
   {
     key: "heal",
     label: "Cura",
-    iconClass: "fu-hp",
+    iconKey: "hp",
     color: "#4ade80",
     bg: "rgba(74, 222, 128, 0.18)",
     border: "rgba(74, 222, 128, 0.55)",
@@ -54,7 +104,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "mana",
     label: "Mana",
-    iconClass: "fu-mp",
+    iconKey: "mp",
     color: "#38bdf8",
     bg: "rgba(56, 189, 248, 0.18)",
     border: "rgba(56, 189, 248, 0.55)",
@@ -63,7 +113,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "mdef",
     label: "Defesa Mágica",
-    iconClass: "fu-mdef",
+    iconKey: "mdef",
     color: "#818cf8",
     bg: "rgba(129, 140, 248, 0.18)",
     border: "rgba(129, 140, 248, 0.55)",
@@ -72,7 +122,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "def",
     label: "Defesa",
-    iconClass: "fu-def",
+    iconKey: "def",
     color: "#60a5fa",
     bg: "rgba(96, 165, 250, 0.18)",
     border: "rgba(96, 165, 250, 0.55)",
@@ -81,7 +131,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "resistance",
     label: "Resistência",
-    iconClass: "fu-guard",
+    iconKey: "guard",
     color: "#2dd4bf",
     bg: "rgba(45, 212, 191, 0.18)",
     border: "rgba(45, 212, 191, 0.55)",
@@ -90,7 +140,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "enchant",
     label: "Encantamento",
-    iconClass: "fu-weaponEnchant",
+    iconKey: "weaponEnchant",
     color: "#fbbf24",
     bg: "rgba(251, 191, 36, 0.18)",
     border: "rgba(251, 191, 36, 0.55)",
@@ -99,7 +149,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "cleanse",
     label: "Purificação",
-    iconClass: "fu-stagger",
+    iconKey: "stagger",
     color: "#f472b6",
     bg: "rgba(244, 114, 182, 0.18)",
     border: "rgba(244, 114, 182, 0.55)",
@@ -108,7 +158,7 @@ const SUPPORT_KEYWORD_RULES = [
   {
     key: "mobility",
     label: "Mobilidade",
-    iconClass: "fu-header",
+    iconKey: "header",
     color: "#a7f3d0",
     bg: "rgba(167, 243, 208, 0.16)",
     border: "rgba(167, 243, 208, 0.5)",
@@ -167,16 +217,6 @@ const STATUS_WORD_MAP = {
   poisoned: "poisoned"
 };
 
-/**
- * Renderiza um ícone oficial do sistema projectfu.
- */
-function renderSystemIcon(iconClass, extraClass = "") {
-  return `<i class="fu-icon ${iconClass} fu-sys-glyph ${extraClass}" aria-hidden="true"></i>`;
-}
-
-/**
- * Calcula quantos níveis o personagem possui e quantos avanços já estão preenchidos.
- */
 export function getPendingLevelInfo(actor) {
   const totalLevel = Math.max(1, Number(actor?.system?.level?.value ?? 1));
   const advancements = Array.isArray(actor?.system?.advancements) ? actor.system.advancements : [];
@@ -192,10 +232,6 @@ export function getPendingLevelInfo(actor) {
   };
 }
 
-/**
- * Percorre nós de texto de um elemento HTML e destaca tipos de dano e condições
- * de status com os ícones e cores oficiais do projectfu.
- */
 function highlightRichKeywordsInDom(rootEl) {
   const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -244,7 +280,7 @@ function highlightRichKeywordsInDom(rootEl) {
         span.style.color = meta.color;
         span.style.borderColor = meta.border;
         span.style.background = meta.bg;
-        span.innerHTML = `${renderSystemIcon(meta.iconClass)}<span>${rawWord}</span>`;
+        span.innerHTML = `${renderTagIcon(meta.iconKey)}<span>${rawWord}</span>`;
         frag.appendChild(span);
       } else if (statusKey && EFFECT_LABELS[statusKey]) {
         const eff = EFFECT_LABELS[statusKey];
@@ -253,7 +289,7 @@ function highlightRichKeywordsInDom(rootEl) {
         span.style.color = eff.color;
         span.style.borderColor = eff.border;
         span.style.background = eff.bg;
-        span.innerHTML = `${renderSystemIcon(eff.iconClass)}<span>${rawWord}</span>`;
+        span.innerHTML = `${renderTagIcon(eff.iconKey)}<span>${rawWord}</span>`;
         frag.appendChild(span);
       } else {
         frag.appendChild(document.createTextNode(rawWord));
@@ -270,10 +306,6 @@ function highlightRichKeywordsInDom(rootEl) {
   }
 }
 
-/**
- * Formata descrições de habilidades e feitiços com ícones oficiais do sistema,
- * tipos de dano coloridos e condições de status destacadas.
- */
 function formatFUDescription(rawHtml = "") {
   if (!rawHtml) return "<p>Sem descrição disponível.</p>";
 
@@ -281,39 +313,39 @@ function formatFUDescription(rawHtml = "") {
     .replace(/@ICON\[([^\]]+)\]/gi, (_, iconName) => {
       const key = iconName.trim().toLowerCase();
       const map = {
-        offensive: { label: "Ofensivo", iconClass: "fu-offensive" },
-        spell: { label: "Feitiço", iconClass: "fu-spell" },
-        melee: { label: "Corpo a Corpo", iconClass: "fu-melee" },
-        ranged: { label: "À Distância", iconClass: "fu-ranged" },
-        range: { label: "À Distância", iconClass: "fu-range" },
-        martial: { label: "Marcial", iconClass: "fu-martial" },
-        physical: { label: "Físico", iconClass: "fu-physical" },
-        fire: { label: "Fogo", iconClass: "fu-fire" },
-        ice: { label: "Gelo", iconClass: "fu-ice" },
-        bolt: { label: "Raio", iconClass: "fu-bolt" },
-        lightning: { label: "Raio", iconClass: "fu-bolt" },
-        earth: { label: "Terra", iconClass: "fu-earth" },
-        air: { label: "Ar", iconClass: "fu-air" },
-        wind: { label: "Ar", iconClass: "fu-air" },
-        light: { label: "Luz", iconClass: "fu-light" },
-        dark: { label: "Trevas", iconClass: "fu-dark" },
-        poison: { label: "Veneno", iconClass: "fu-poison" }
+        offensive: { label: "Ofensivo", iconKey: "offensive" },
+        spell: { label: "Feitiço", iconKey: "spell" },
+        melee: { label: "Corpo a Corpo", iconKey: "melee" },
+        ranged: { label: "À Distância", iconKey: "ranged" },
+        range: { label: "À Distância", iconKey: "ranged" },
+        martial: { label: "Marcial", iconKey: "martial" },
+        physical: { label: "Físico", iconKey: "physical" },
+        fire: { label: "Fogo", iconKey: "fire" },
+        ice: { label: "Gelo", iconKey: "ice" },
+        bolt: { label: "Raio", iconKey: "bolt" },
+        lightning: { label: "Raio", iconKey: "bolt" },
+        earth: { label: "Terra", iconKey: "earth" },
+        air: { label: "Ar", iconKey: "air" },
+        wind: { label: "Ar", iconKey: "air" },
+        light: { label: "Luz", iconKey: "light" },
+        dark: { label: "Trevas", iconKey: "dark" },
+        poison: { label: "Veneno", iconKey: "poison" }
       };
       const entry = map[key];
       if (entry) {
-        return `<span class="fu-inline-tag">${renderSystemIcon(entry.iconClass)} ${entry.label}</span>`;
+        return `<span class="fu-inline-tag">${renderTagIcon(entry.iconKey)} ${entry.label}</span>`;
       }
-      return `<span class="fu-inline-tag">${renderSystemIcon(`fu-${key}`)} ${iconName}</span>`;
+      return `<span class="fu-inline-tag">${renderTagIcon(key)} ${iconName}</span>`;
     })
     .replace(/@EFFECT\[([^\]]+)\](?:\{([^}]+)\}|\[([^\]]+)\])?/gi, (_, effKey, curlyLabel, bracketLabel) => {
       const key = effKey.trim().toLowerCase();
       const found = EFFECT_LABELS[key];
       const text = curlyLabel || bracketLabel || (found ? found.label : effKey);
-      const iconClass = found ? found.iconClass : `fu-${key}`;
+      const iconKey = found ? found.iconKey : key;
       const style = found
         ? `style="color: ${found.color}; border-color: ${found.border}; background: ${found.bg};"`
         : "";
-      return `<span class="fu-inline-effect" ${style}>${renderSystemIcon(iconClass)} ${text}</span>`;
+      return `<span class="fu-inline-effect" ${style}>${renderTagIcon(iconKey)} ${text}</span>`;
     })
     .replace(/@(?:GAIN|LOSS|DMG)\[([^\]]+)\](?:\{([^}]+)\}|\[([^\]]+)\])?/gi, (_, expr, curlyLabel, bracketLabel) => {
       const label = curlyLabel || bracketLabel || expr;
@@ -329,9 +361,6 @@ function formatFUDescription(rawHtml = "") {
   return container.innerHTML;
 }
 
-/**
- * Detecta os tipos de dano elemental de um feitiço ofensivo ou encantamento.
- */
 function detectSpellElements(spellDoc) {
   const found = [];
   const addUnique = (key) => {
@@ -385,9 +414,6 @@ function detectSpellElements(spellDoc) {
   return found;
 }
 
-/**
- * Extrai tags automáticas para feitiços de Suporte / Utilidade com base nas palavras-chave da descrição.
- */
 function detectSupportSpellTags(spellDoc) {
   const rawDesc = spellDoc?.system?.description || "";
   const plainDesc = rawDesc
@@ -400,7 +426,7 @@ function detectSupportSpellTags(spellDoc) {
     if (rule.regex.test(plainDesc)) {
       tags.push({
         label: rule.label,
-        iconClass: rule.iconClass,
+        iconKey: rule.iconKey,
         color: rule.color,
         bg: rule.bg,
         border: rule.border
@@ -410,9 +436,6 @@ function detectSupportSpellTags(spellDoc) {
   return tags;
 }
 
-/**
- * Detecta condições de status mencionadas em um feitiço (ex.: Atordoado, Abalado).
- */
 function detectSpellStatusTags(spellDoc) {
   const rawDesc = spellDoc?.system?.description || "";
   const plainDesc = rawDesc
@@ -512,14 +535,12 @@ export class FULevelUpWizard {
       heroicSkills: []
     };
 
-    // Estado da câmera da árvore radial (pan & zoom)
     this.pan = { x: 0, y: 0 };
     this.zoom = 1;
     this.savedCamera = null;
     this.isRightDragging = false;
     this.dragStart = { x: 0, y: 0 };
 
-    // Estados de seleção e animações
     this.stagedNewClass = null;
     this.animateStagedSpawn = false;
     this.recentUpgradeAnim = null;
@@ -1032,8 +1053,6 @@ export class FULevelUpWizard {
     const upgradeAnim = this.recentUpgradeAnim;
     const dezoomTransition = this.pendingDezoomTransition;
 
-    // Se houver uma transição de de-zoom pendente, renderizamos o canvas inicialmente
-    // na câmera ampliada para depois deslizar suavemente até o destino.
     const initialPan = dezoomTransition ? dezoomTransition.fromPan : this.pan;
     const initialZoom = dezoomTransition ? dezoomTransition.fromZoom : this.zoom;
 
@@ -1096,7 +1115,6 @@ export class FULevelUpWizard {
     this.populateRadialTree(classesData, info, upgradeAnim);
     this.bindTreeEvents();
 
-    // Executa o de-zoom suave de volta para a árvore completa sem pulos
     if (dezoomTransition) {
       const targetPan = { ...dezoomTransition.toPan };
       const targetZoom = dezoomTransition.toZoom;
@@ -1303,7 +1321,6 @@ export class FULevelUpWizard {
 
         layer.appendChild(skillEl);
 
-        // Ramificações de feitiços aprendidos vinculados a esta habilidade
         if (skill.learnedSpells && skill.learnedSpells.length > 0) {
           const outAngle = Math.atan2(ny - sy, nx - sx);
           const spCount = skill.learnedSpells.length;
@@ -1357,8 +1374,8 @@ export class FULevelUpWizard {
                 <img src="${spellItem.img}" alt="${spellItem.name}" />
                 ${
                   primaryEl
-                    ? `<span class="fu-spell-branch-el-pin" style="border-color: ${primaryEl.color};">
-                        ${renderSystemIcon(primaryEl.iconClass)}
+                    ? `<span class="fu-spell-branch-el-pin" style="border-color: ${primaryEl.color}; color: ${primaryEl.color};">
+                        ${renderTagIcon(primaryEl.iconKey)}
                       </span>`
                     : ""
                 }
@@ -1634,7 +1651,7 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (APRENDIDOS NO FINAL + TAGS POR PALAVRA-CHAVE)
+   * MODAL 3º PASSO: GRIMÓRIO DE FEITIÇOS (APRENDIDOS NO FINAL + TAGS COM ÍCONES)
    * ========================================================================== */
   getSpellsForClass(classFuid, showAll = false) {
     const ownedSpells = this.actor.items.filter((i) => i.type === "spell");
@@ -1688,7 +1705,6 @@ export class FULevelUpWizard {
       };
     });
 
-    // Move feitiços já aprendidos para o final da lista, mantendo ordem alfabética PT-BR
     mapped.sort((a, b) => {
       if (a.alreadyKnown !== b.alreadyKnown) {
         return a.alreadyKnown ? 1 : -1;
@@ -1705,10 +1721,6 @@ export class FULevelUpWizard {
     const bannersHtml = spells
       .map((sp) => {
         const primaryEl = sp.elements[0] || null;
-
-        // Badges do cabeçalho:
-        // - Feitiços ofensivos: elementos detectados (Fogo, Raio, etc.) ou status se não tiver elemento
-        // - Feitiços de Suporte / Utilidade: tags detectadas por palavras-chave (Cura, Defesa, Resistência, etc.)
         let badgesHtml = "";
 
         if (sp.isOffensive) {
@@ -1717,7 +1729,7 @@ export class FULevelUpWizard {
               .map(
                 (el) => `
                 <span class="fu-el-pill" style="color: ${el.color}; background: ${el.bg}; border-color: ${el.border};">
-                  ${renderSystemIcon(el.iconClass)} ${el.label}
+                  ${renderTagIcon(el.iconKey)} ${el.label}
                 </span>
               `
               )
@@ -1727,17 +1739,16 @@ export class FULevelUpWizard {
               .map(
                 (st) => `
                 <span class="fu-el-pill" style="color: ${st.color}; background: ${st.bg}; border-color: ${st.border};">
-                  ${renderSystemIcon(st.iconClass)} ${st.label}
+                  ${renderTagIcon(st.iconKey)} ${st.label}
                 </span>
               `
               )
               .join("");
           } else {
-            badgesHtml = `<span class="fu-el-pill neutral">${renderSystemIcon("fu-offensive")} Ofensivo</span>`;
+            badgesHtml = `<span class="fu-el-pill neutral">${renderTagIcon("offensive")} Ofensivo</span>`;
           }
         } else {
           const combinedSupport = [...sp.supportTags];
-          // Se o feitiço de suporte imbui um elemento específico (ex.: Arma Espiritual -> Luz), adiciona a tag do elemento
           if (sp.elements.length === 1) {
             combinedSupport.push(sp.elements[0]);
           }
@@ -1747,13 +1758,13 @@ export class FULevelUpWizard {
               .map(
                 (tag) => `
                 <span class="fu-el-pill" style="color: ${tag.color}; background: ${tag.bg}; border-color: ${tag.border};">
-                  ${renderSystemIcon(tag.iconClass)} ${tag.label}
+                  ${renderTagIcon(tag.iconKey)} ${tag.label}
                 </span>
               `
               )
               .join("");
           } else {
-            badgesHtml = `<span class="fu-el-pill neutral">${renderSystemIcon("fu-spell")} Suporte / Utilidade</span>`;
+            badgesHtml = `<span class="fu-el-pill neutral">${renderTagIcon("spell")} Suporte / Utilidade</span>`;
           }
         }
 
@@ -1772,8 +1783,8 @@ export class FULevelUpWizard {
                 <img src="${sp.img}" alt="${sp.name}" />
                 ${
                   primaryEl
-                    ? `<span class="fu-medallion-element-badge" title="Dano de ${primaryEl.label}" style="border-color: ${primaryEl.color};">
-                        ${renderSystemIcon(primaryEl.iconClass)}
+                    ? `<span class="fu-medallion-element-badge" title="Dano de ${primaryEl.label}" style="border-color: ${primaryEl.color}; color: ${primaryEl.color};">
+                        ${renderTagIcon(primaryEl.iconKey)}
                       </span>`
                     : ""
                 }
@@ -1843,7 +1854,7 @@ export class FULevelUpWizard {
   }
 
   /* ==========================================================================
-   * MODAL PODERES HERÓICOS (NÍVEL 10 NA CLASSE)
+   * MODAL PODERES HERÓICOS (TODOS OS 8 EXCLUSIVOS + GENÉRICOS)
    * ========================================================================== */
   getHeroicSkillsForClass(classFuid, className) {
     const ownedHeroics = this.actor.items.filter((i) => i.type === "heroic");
@@ -1853,6 +1864,48 @@ export class FULevelUpWizard {
         .filter(Boolean)
     );
 
+    const normTargetFuid = normalizeTextKey(classFuid);
+    const normTargetName = normalizeTextKey(className);
+
+    // Conjuntos de aliases conhecidas de classes para cobrir suplementos em PT/EN
+    const classAliases = new Set([normTargetFuid, normTargetName].filter(Boolean));
+    const aliasPairs = [
+      ["wayfarer", "andarilho"],
+      ["elementalist", "elementalista"],
+      ["entropist", "entropista"],
+      ["spiritist", "espiritualista"],
+      ["arcanist", "arcanista"],
+      ["chimerist", "quimerista"],
+      ["darkblade", "lamina sombria", "lâmina sombria"],
+      ["fury", "furia", "fúria"],
+      ["guardian", "guardiao", "guardião"],
+      ["loremaster", "erudito"],
+      ["orator", "orador"],
+      ["rogue", "ladino"],
+      ["sharpshooter", "atirador"],
+      ["tinkerer", "engenhoqueiro"],
+      ["weaponmaster", "mestre de armas"],
+      ["chanter", "cantor"],
+      ["commander", "comandante"],
+      ["dancer", "dancarino", "dançarino"],
+      ["symbolist", "simbolista"],
+      ["esper", "esper"],
+      ["mutant", "mutante"],
+      ["pilot", "piloto"],
+      ["floralist", "floralista"],
+      ["gourmet", "gourmet"],
+      ["invoker", "invocador"],
+      ["merchant", "mercador"]
+    ];
+
+    for (const group of aliasPairs) {
+      if (group.some((alias) => classAliases.has(normalizeTextKey(alias)))) {
+        for (const alias of group) {
+          classAliases.add(normalizeTextKey(alias));
+        }
+      }
+    }
+
     const exclusive = [];
     const generic = [];
 
@@ -1861,8 +1914,10 @@ export class FULevelUpWizard {
       const nameKey = hDoc.name.trim().toLowerCase();
       const alreadyKnown = (fuid && ownedKeys.has(fuid)) || ownedKeys.has(nameKey);
 
-      const hClass = (hDoc.system?.class?.value ?? hDoc.system?.class ?? "").toString().trim().toLowerCase();
-      const requirement = (hDoc.system?.requirement?.value || "").trim();
+      const rawClassField = (hDoc.system?.class?.value ?? hDoc.system?.class ?? "").toString();
+      const normClassField = normalizeTextKey(rawClassField);
+      const requirementRaw = (hDoc.system?.requirement?.value || "").trim();
+      const normReq = normalizeTextKey(requirementRaw);
 
       const mapped = {
         doc: hDoc,
@@ -1870,14 +1925,39 @@ export class FULevelUpWizard {
         name: hDoc.name,
         img: hDoc.img,
         alreadyKnown,
-        requirement,
+        requirement: requirementRaw,
         description: hDoc.system?.description || ""
       };
 
-      if (hClass && (hClass === classFuid || hClass === className.trim().toLowerCase())) {
+      const matchesClassField =
+        normClassField &&
+        Array.from(classAliases).some(
+          (alias) => normClassField === alias || normClassField.includes(alias)
+        );
+
+      const matchesRequirementField =
+        (!normClassField || normClassField === "none" || normClassField === "generic") &&
+        normReq &&
+        Array.from(classAliases).some((alias) => {
+          const esc = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          return new RegExp(`(?:^|[^a-z0-9])${esc}(?:$|[^a-z0-9])`).test(normReq);
+        });
+
+      if (matchesClassField || matchesRequirementField) {
         exclusive.push(mapped);
-      } else if (!hClass || hClass === "none" || hClass === "generic") {
-        generic.push(mapped);
+      } else if (!normClassField || normClassField === "none" || normClassField === "generic") {
+        // Verifica se não é exclusivo de outra classe citado no requisito
+        const isOtherClassExclusive = aliasPairs.some((group) => {
+          if (group.some((alias) => classAliases.has(normalizeTextKey(alias)))) return false;
+          return group.some((otherAlias) => {
+            const esc = normalizeTextKey(otherAlias).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            return new RegExp(`(?:^|[^a-z0-9])${esc}(?:$|[^a-z0-9])`).test(normReq);
+          });
+        });
+
+        if (!isOtherClassExclusive) {
+          generic.push(mapped);
+        }
       }
     }
 
@@ -2075,7 +2155,7 @@ export class FULevelUpWizard {
       .map(
         (el) => `
         <span class="fu-el-pill" style="color: ${el.color}; background: ${el.bg}; border-color: ${el.border};">
-          ${renderSystemIcon(el.iconClass)} ${el.label}
+          ${renderTagIcon(el.iconKey)} ${el.label}
         </span>
       `
       )
@@ -2264,7 +2344,6 @@ export class FULevelUpWizard {
 
           confirmBtn.disabled = true;
 
-          // Animação rápida e leve (sem backdrop-filter) enquanto salva os dados
           const backdrop = this.root.querySelector("#fu-skill-showcase-backdrop");
           if (backdrop) {
             backdrop.classList.add("is-confirm-exiting");
@@ -2500,7 +2579,6 @@ export class FULevelUpWizard {
         `${this.actor.name}: ${selection.className} — ${selection.skillName} (NP ${newSkillRank}/${maxSkillRank})${spellSuffix}${heroicSuffix} aplicado!`
       );
 
-      // Captura a câmera ampliada atual para iniciar a árvore nela e fazer o de-zoom fluido
       const zoomedPan = { ...this.pan };
       const zoomedScale = this.zoom;
 
