@@ -80,18 +80,14 @@ export function refreshTopCenterTrigger(preferredActor = null) {
           </linearGradient>
         </defs>
 
-        <!-- Fundo escuro interno -->
         <path d="M 46 22 L 554 22 L 568 46 L 554 70 L 46 70 L 32 46 Z" fill="url(#fuInnerSilk)" />
 
-        <!-- Moldura externa principal -->
         <path d="M 44 20 L 274 20 L 300 5 L 326 20 L 556 20 L 574 46 L 556 72 L 326 72 L 300 82 L 274 72 L 44 72 L 26 46 Z"
               fill="none" stroke="url(#fuMetalBorder)" stroke-width="3" stroke-linejoin="round" />
 
-        <!-- Linha interna dourada sutil -->
         <path d="M 52 26 L 548 26 L 562 46 L 548 66 L 52 66 L 38 46 Z"
               fill="none" stroke="rgba(250, 204, 21, 0.32)" stroke-width="1.2" />
 
-        <!-- Ornamentos pontiagudos laterais (Asas góticas) -->
         <path d="M 44 20 C 26 16, 16 8, 12 22 C 22 28, 26 36, 26 46 C 26 56, 22 64, 12 70 C 16 84, 26 76, 44 72"
               fill="none" stroke="url(#fuMetalBorder)" stroke-width="2.6" stroke-linecap="round" />
         <path d="M 26 46 L 4 46 L 18 39 M 4 46 L 18 53"
@@ -102,11 +98,9 @@ export function refreshTopCenterTrigger(preferredActor = null) {
         <path d="M 574 46 L 596 46 L 582 39 M 596 46 L 582 53"
               fill="none" stroke="url(#fuMetalBorder)" stroke-width="2" stroke-linecap="round" />
 
-        <!-- Espinhos inferiores nos cantos -->
         <path d="M 115 72 L 106 86 L 126 72" fill="url(#fuMetalBorder)" />
         <path d="M 485 72 L 494 86 L 474 72" fill="url(#fuMetalBorder)" />
 
-        <!-- Brasão diamante central superior -->
         <polygon points="300,7 310,17 300,27 290,17" fill="#18141f" stroke="url(#fuMetalBorder)" stroke-width="2.2" />
         <circle cx="300" cy="17" r="2.5" fill="#facc15" />
       </svg>
